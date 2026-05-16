@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard – Estudiante</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="custom.css" rel="stylesheet">
+</head>
+<body>
+<div id="sidebar-container"></div>
+
+<div class="main-content">
+  <!-- Topbar -->
+  <div class="topbar d-flex align-items-center justify-content-between">
+    <div>
+      <h5 class="fw-bold mb-0">Dashboard</h5>
+      <p class="text-muted small mb-0">Bienvenido de vuelta, <span id="nombre-display" class="fw-semibold"></span> 👋</p>
+    </div>
+    <a href="catalogo.html" class="btn btn-accent btn-sm">
+      <i class="bi bi-plus-lg me-1"></i> Solicitar Préstamo
+    </a>
+  </div>
+
+  <div class="p-4">
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-xl-3">
+        <div class="stat-card p-3 d-flex justify-content-between align-items-start h-100">
+          <div><div class="stat-num text-primary">2</div><div class="small text-muted mt-1">Préstamos Activos</div></div>
+          <div class="stat-icon" style="background:#dbeafe;">📦</div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="stat-card p-3 d-flex justify-content-between align-items-start h-100">
+          <div><div class="stat-num text-success">8</div><div class="small text-muted mt-1">Préstamos Históricos</div></div>
+          <div class="stat-icon" style="background:#d1fae5;">✅</div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="stat-card p-3 d-flex justify-content-between align-items-start h-100">
+          <div><div class="stat-num text-warning">3</div><div class="small text-muted mt-1">Mensajes Recibidos</div></div>
+          <div class="stat-icon" style="background:#fef3c7;">💬</div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="stat-card p-3 d-flex justify-content-between align-items-start h-100">
+          <div><div class="stat-num text-danger">1</div><div class="small text-muted mt-1">Por Vencer Pronto</div></div>
+          <div class="stat-icon" style="background:#fee2e2;">⚠️</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Active loans -->
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center py-3 px-4">
+            <span class="fw-bold"><i class="bi bi-box-seam-fill me-2 text-primary"></i>Mis Préstamos Activos</span>
+            <a href="prestamos-activos.html" class="btn btn-outline-secondary btn-sm">Ver todos</a>
+          </div>
+          <div class="card-body d-flex flex-column gap-3">
+
+            <div class="border rounded-3 p-3 border-left-danger">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold small">Préstamo #P-2026-042</span>
+                <span class="badge badge-soft-warning rounded-pill">⏳ Activo</span>
+              </div>
+              <p class="small text-muted mb-2">Osciloscopio Digital + Cable BNC (2 equipos)</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="small text-muted">Vence: <strong>22 Abr 2026</strong></span>
+                <span class="badge badge-soft-danger rounded-pill">⚠️ 3 días</span>
+              </div>
+              <div class="mt-2">
+                <div class="progress loan-progress"><div class="progress-bar bg-danger" style="width:71%"></div></div>
+                <small class="text-muted">71% del período transcurrido</small>
+              </div>
+            </div>
+
+            <div class="border rounded-3 p-3 border-left-success">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="fw-bold small">Préstamo #P-2026-038</span>
+                <span class="badge badge-soft-success rounded-pill">✅ Activo</span>
+              </div>
+              <p class="small text-muted mb-2">Multímetro Fluke 117 (1 equipo)</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="small text-muted">Vence: <strong>28 Abr 2026</strong></span>
+                <span class="badge badge-soft-success rounded-pill">9 días</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity -->
+      <div class="col-lg-6">
+        <div class="card h-100">
+          <div class="card-header py-3 px-4">
+            <span class="fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Actividad Reciente</span>
+          </div>
+          <div class="card-body">
+            <div class="timeline-item">
+              <div class="timeline-dot" style="background:#d1fae5;color:#065f46;"><i class="bi bi-check-lg" style="font-size:12px;"></i></div>
+              <div class="ps-1">
+                <p class="mb-0 fw-semibold small">Préstamo aprobado – Osciloscopio Digital</p>
+                <small class="text-muted" style="font-family:monospace;">Hoy, 09:15 am · Lab. Electrónica</small>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot" style="background:#dbeafe;color:#1e40af;"><i class="bi bi-chat-dots" style="font-size:12px;"></i></div>
+              <div class="ps-1">
+                <p class="mb-0 fw-semibold small">Respuesta recibida – Dr. García López</p>
+                <small class="text-muted" style="font-family:monospace;">Ayer, 4:30 pm</small>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot" style="background:#fef3c7;color:#92400e;"><i class="bi bi-send" style="font-size:12px;"></i></div>
+              <div class="ps-1">
+                <p class="mb-0 fw-semibold small">Solicitud enviada – Multímetro Fluke</p>
+                <small class="text-muted" style="font-family:monospace;">17 Abr, 11:00 am</small>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-dot" style="background:#d1fae5;color:#065f46;"><i class="bi bi-arrow-return-left" style="font-size:12px;"></i></div>
+              <div class="ps-1">
+                <p class="mb-0 fw-semibold small">Equipo devuelto – Arduino Mega</p>
+                <small class="text-muted" style="font-family:monospace;">15 Abr, 06:00 pm</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header py-3 px-4">
+            <span class="fw-bold"><i class="bi bi-lightning-fill me-2 text-warning"></i>Acciones Rápidas</span>
+          </div>
+          <div class="card-body d-flex gap-2 flex-wrap">
+            <a href="catalogo.html" class="btn btn-primary btn-sm"><i class="bi bi-cpu-fill me-1"></i>Catálogo de Equipos</a>
+            <a href="prestamos-activos.html" class="btn btn-outline-primary btn-sm"><i class="bi bi-box-seam me-1"></i>Préstamos Activos</a>
+            <a href="mensajes-estudiante.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-chat-dots me-1"></i>Enviar Mensaje</a>
+            <a href="historial-prestamos.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-clock-history me-1"></i>Ver Historial</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="nav.js"></script>
+<script>
+const rol = sessionStorage.getItem('rol')||'estudiante';
+const nombre = sessionStorage.getItem('nombre')||'Ana López Torres';
+document.getElementById('nombre-display').textContent = nombre.split(' ')[0];
+buildNav(rol, 'dashboard-estudiante.html', nombre);
+</script>
+</body>
+</html>

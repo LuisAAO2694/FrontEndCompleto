@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Historial de Préstamos</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="custom.css" rel="stylesheet">
+</head>
+<body>
+<div id="sidebar-container"></div>
+<div class="main-content">
+  <div class="topbar d-flex align-items-center justify-content-between">
+    <div><h5 class="fw-bold mb-0">Historial de Préstamos</h5><p class="small text-muted mb-0">Registro completo de todos tus préstamos</p></div>
+  </div>
+  <div class="p-4">
+    <div class="card mb-4">
+      <div class="card-body">
+        <div class="row g-2 align-items-end">
+          <div class="col-md-3"><label class="form-label small text-muted text-uppercase fw-semibold">Fecha inicio</label><input type="date" class="form-control" value="2026-01-01"></div>
+          <div class="col-md-3"><label class="form-label small text-muted text-uppercase fw-semibold">Fecha fin</label><input type="date" class="form-control" value="2026-04-19"></div>
+          <div class="col-md-3"><label class="form-label small text-muted text-uppercase fw-semibold">Estado</label>
+            <select class="form-select"><option value="">Todos</option><option>FINALIZADO</option><option>CANCELADO</option><option>RECHAZADO</option></select>
+          </div>
+          <div class="col-md-3 d-flex gap-2">
+            <button class="btn btn-primary btn-sm flex-fill">Filtrar</button>
+            <button class="btn btn-outline-secondary btn-sm flex-fill"><i class="bi bi-download me-1"></i>CSV</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header py-3 px-4"><span class="fw-bold"><i class="bi bi-clock-history me-2 text-primary"></i>Historial Completo (6 registros)</span></div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead><tr><th>Folio</th><th>Equipos</th><th>Laboratorio</th><th>Préstamo</th><th>Devolución</th><th>Estado</th><th>Resultado</th><th></th></tr></thead>
+          <tbody>
+            <tr><td><code>#P-2026-038</code></td><td>Arduino Mega 2560</td><td>Lab. Microcontroladores</td><td>05 Abr 2026</td><td>15 Abr 2026</td><td><span class="badge badge-soft-success rounded-pill">FINALIZADO</span></td><td><span class="badge badge-soft-accent rounded-pill">DEVUELTO ✓</span></td><td><button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHist">Ver</button></td></tr>
+            <tr><td><code>#P-2026-031</code></td><td>Fuente de Poder Variable</td><td>Lab. Electrónica</td><td>28 Mar 2026</td><td>04 Abr 2026</td><td><span class="badge badge-soft-success rounded-pill">FINALIZADO</span></td><td><span class="badge badge-soft-accent rounded-pill">DEVUELTO ✓</span></td><td><button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHist">Ver</button></td></tr>
+            <tr><td><code>#P-2026-025</code></td><td>Kit Sensores IoT (x2)</td><td>Lab. Microcontroladores</td><td>10 Mar 2026</td><td>20 Mar 2026</td><td><span class="badge badge-soft-success rounded-pill">FINALIZADO</span></td><td><span class="badge badge-soft-warning rounded-pill">DEVUELTO DAÑADO</span></td><td><button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHist">Ver</button></td></tr>
+            <tr><td><code>#P-2026-018</code></td><td>Laptop ThinkPad E15</td><td>Lab. Cómputo</td><td>20 Feb 2026</td><td>27 Feb 2026</td><td><span class="badge badge-soft-success rounded-pill">FINALIZADO</span></td><td><span class="badge badge-soft-accent rounded-pill">DEVUELTO ✓</span></td><td><button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHist">Ver</button></td></tr>
+            <tr><td><code>#P-2026-010</code></td><td>Osciloscopio Digital</td><td>Lab. Electrónica</td><td>03 Feb 2026</td><td>—</td><td><span class="badge badge-soft-muted rounded-pill">CANCELADO</span></td><td>—</td><td><button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHist">Ver</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer bg-transparent d-flex justify-content-center py-3">
+        <nav><ul class="pagination pagination-sm mb-0"><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li><li class="page-item"><a class="page-link" href="#">›</a></li></ul></nav>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="modalHist" tabindex="-1"><div class="modal-dialog"><div class="modal-content rounded-4">
+  <div class="modal-header border-0"><h5 class="modal-title fw-bold">📋 Detalle Préstamo #P-2026-038</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body">
+    <div class="row g-3">
+      <div class="col-6"><label class="form-label small text-uppercase text-muted fw-semibold">Equipo</label><p class="mb-0">Arduino Mega 2560</p></div>
+      <div class="col-6"><label class="form-label small text-uppercase text-muted fw-semibold">Laboratorio</label><p class="mb-0">Lab. Microcontroladores</p></div>
+      <div class="col-6"><label class="form-label small text-uppercase text-muted fw-semibold">Fecha préstamo</label><p class="mb-0 font-monospace">05 Abr 2026</p></div>
+      <div class="col-6"><label class="form-label small text-uppercase text-muted fw-semibold">Fecha devolución</label><p class="mb-0 font-monospace">15 Abr 2026</p></div>
+      <div class="col-6"><label class="form-label small text-uppercase text-muted fw-semibold">Aprobado por</label><p class="mb-0">Dr. García López</p></div>
+      <div class="col-6"><label class="form-label small text-uppercase text-muted fw-semibold">Estado final</label><span class="badge badge-soft-accent rounded-pill">DEVUELTO</span></div>
+      <div class="col-12"><label class="form-label small text-uppercase text-muted fw-semibold">Condición regreso</label><p class="mb-0">Buen estado, sin daños.</p></div>
+    </div>
+  </div>
+  <div class="modal-footer border-0"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button></div>
+</div></div></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="nav.js"></script>
+<script>
+buildNav(sessionStorage.getItem('rol')||'rol', 'historial-prestamos.html', sessionStorage.getItem('nombre')||'Usuario');
+</script>
+</body></html>

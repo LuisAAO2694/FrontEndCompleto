@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Préstamos Activos – Encargado</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link href="custom.css" rel="stylesheet">
+</head>
+<body>
+<div id="sidebar-container"></div>
+<div class="main-content">
+  <div class="topbar d-flex align-items-center justify-content-between">
+    <div><h5 class="fw-bold mb-0">Préstamos Activos</h5><p class="small text-muted mb-0">Gestiona entregas y devoluciones</p></div>
+    <select class="form-select form-select-sm" style="width:auto;"><option>Todos los laboratorios</option><option>Lab. Electrónica</option><option>Lab. Cómputo</option><option>Lab. Microcontroladores</option></select>
+  </div>
+  <div class="p-4">
+    <div class="card"><div class="card-header py-3 px-4 d-flex justify-content-between align-items-center">
+      <span class="fw-bold"><i class="bi bi-box-seam-fill me-2 text-primary"></i>Préstamos en Curso (12)</span>
+      <div class="d-flex gap-2"><div class="input-group input-group-sm" style="width:200px;"><span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span><input type="text" class="form-control" placeholder="Buscar estudiante..."></div>
+      <select class="form-select form-select-sm" style="width:auto;"><option>Todos</option><option>ACTIVO</option><option>POR VENCER</option><option>VENCIDO</option></select></div>
+    </div>
+    <div class="table-responsive"><table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Folio</th><th>Estudiante</th><th>Equipos</th><th>Laboratorio</th><th>Inicio</th><th>Vencimiento</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody>
+        <tr style="background:#fff5f5;">
+          <td><code>#P-2026-042</code></td><td><strong>Ana López Torres</strong><br><small class="font-monospace text-muted">A01234567</small></td>
+          <td>Osciloscopio DS1054Z<br><small class="text-muted">Cable BNC</small></td>
+          <td>Lab. Electrónica</td><td class="font-monospace small">12 Abr</td>
+          <td class="font-monospace fw-bold text-danger">22 Abr ⚠️</td>
+          <td><span class="badge badge-soft-danger rounded-pill">POR VENCER (3d)</span></td>
+          <td><div class="d-flex gap-1"><button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalDev" onclick="setFolio('P-2026-042')"><i class="bi bi-box-arrow-in-down me-1"></i>Devolver</button><button class="btn btn-outline-secondary btn-sm"><i class="bi bi-eye"></i></button></div></td>
+        </tr>
+        <tr style="background:#fff5f5;">
+          <td><code>#P-2026-037</code></td><td><strong>Pedro Ramírez</strong><br><small class="font-monospace text-muted">A01198234</small></td>
+          <td>Raspberry Pi 4</td><td>Lab. Microcontroladores</td><td class="font-monospace small">10 Abr</td>
+          <td class="font-monospace fw-bold text-danger">16 Abr 🚨</td>
+          <td><span class="badge badge-soft-danger rounded-pill">VENCIDO (3d)</span></td>
+          <td><div class="d-flex gap-1"><button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalDev" onclick="setFolio('P-2026-037')"><i class="bi bi-box-arrow-in-down me-1"></i>Devolver</button><button class="btn btn-outline-secondary btn-sm"><i class="bi bi-eye"></i></button></div></td>
+        </tr>
+        <tr>
+          <td><code>#P-2026-040</code></td><td><strong>Sofía Martínez</strong></td><td>Arduino Mega 2560</td><td>Lab. Microcontroladores</td><td class="font-monospace small">15 Abr</td><td class="font-monospace">29 Abr</td>
+          <td><span class="badge badge-soft-success rounded-pill">ACTIVO</span></td>
+          <td><button class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalDev" onclick="setFolio('P-2026-040')"><i class="bi bi-box-arrow-in-down me-1"></i>Devolver</button></td>
+        </tr>
+      </tbody>
+    </table></div></div>
+  </div>
+</div>
+<div class="modal fade" id="modalDev" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content rounded-4">
+  <div class="modal-header border-0"><h5 class="modal-title fw-bold"><i class="bi bi-box-arrow-in-down me-2"></i>Registrar Devolución – <span id="folio-label"></span></h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body">
+    
+    <div class="border rounded-3 p-3 mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-2"><strong>Osciloscopio Digital DS1054Z</strong><code class="small text-muted">LAB-EQ-00025</code></div>
+      <div class="row g-2">
+        <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Estado de devolución *</label>
+          <select class="form-select form-select-sm"><option value="DEVUELTO">✅ DEVUELTO – Buen estado</option><option value="DEVUELTO_DAÑADO">⚠️ DEVUELTO_DAÑADO – Con daños</option><option value="NO_DEVUELTO">🚨 NO_DEVUELTO – No entregado</option></select></div>
+        <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Observaciones</label><input type="text" class="form-control form-control-sm" placeholder="Opcional..."></div>
+      </div>
+    </div>
+    <div class="border rounded-3 p-3 mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-2"><strong>Cable BNC a Cocodrilo</strong><code class="small text-muted">LAB-EQ-00031</code></div>
+      <div class="row g-2">
+        <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Estado de devolución *</label>
+          <select class="form-select form-select-sm"><option value="DEVUELTO">✅ DEVUELTO – Buen estado</option><option value="DEVUELTO_DAÑADO">⚠️ DEVUELTO_DAÑADO – Con daños</option><option value="NO_DEVUELTO">🚨 NO_DEVUELTO – No entregado</option></select></div>
+        <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Observaciones</label><input type="text" class="form-control form-control-sm" placeholder="Opcional..."></div>
+      </div>
+    </div>
+    <div class="alert alert-info small"><i class="bi bi-info-circle me-1"></i>Los equipos en estado DEVUELTO regresarán a DISPONIBLE automáticamente.</div>
+  </div>
+  <div class="modal-footer border-0">
+    <button class="btn btn-success" onclick="confirmarDev()"><i class="bi bi-check-lg me-1"></i>Confirmar Devolución</button>
+    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+  </div>
+</div></div></div>
+<script>
+function setFolio(f){document.getElementById('folio-label').textContent='#'+f;}
+function confirmarDev(){bootstrap.Modal.getInstance(document.getElementById('modalDev')).hide();alert('✅ Devolución registrada correctamente.');}
+</script>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="nav.js"></script>
+<script>
+buildNav(sessionStorage.getItem('rol')||'encargado', 'prestamos-encargado.html', sessionStorage.getItem('nombre')||'Usuario');
+</script>
+</body></html>
