@@ -157,20 +157,117 @@
   </div>
   <div class="modal-footer border-0"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button></div>
 </div></div></div>
-<script>
-function guardarEquipo(){let ok=true;
-  const n=document.getElementById('eq-nom');n.value.trim().length<3?(n.classList.add('is-invalid'),ok=false):n.classList.remove('is-invalid');
-  const c=document.getElementById('eq-cod');c.value.trim()?(c.classList.remove('is-invalid')):(c.classList.add('is-invalid'),ok=false);
-  const cat=document.getElementById('eq-cat');cat.value?(cat.classList.remove('is-invalid')):(cat.classList.add('is-invalid'),ok=false);
-  const lab=document.getElementById('eq-lab');lab.value?(lab.classList.remove('is-invalid')):(lab.classList.add('is-invalid'),ok=false);
-  if(!ok)return; bootstrap.Modal.getInstance(document.getElementById('modalEquipo')).hide(); alert('✅ Equipo registrado exitosamente.');
+<script type="module">
+import { getProducts, getCategories, getLaboratories, createProduct, updateProduct, deleteProduct, getUser, showError, showSuccess } from './api.js';
+
+const user = getUser();
+buildNav(user.role, 'gestion-equipos.html');
+
+let products = [];
+
+async function init() {
+  await loadFilters();
+  loadProducts();
 }
-function darBaja(){if(confirm('¿Dar de baja este equipo?'))alert('Equipo dado de baja.');}
+
+async function loadFilters() {
+  try {
+    const [categories, laboratories] = await Promise.all([getCategories(), getLaboratories()]);
+    const catSelect = document.getElementById('eq-cat');
+    const labSelect = document.getElementById('eq-lab');
+    categories.forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
+    laboratories.forEach(l => labSelect.innerHTML += `<option value="${l}">${l}</option>`);
+  } catch (error) {
+    console.error('Error loading filters:', error);
+  }
+}
+
+async function loadProducts() {
+  try {
+    const result = await getProducts({});
+    products = result.data;
+    renderProducts(result.total);
+  } catch (error) {
+    showError('Error al cargar productos');
+  }
+}
+
+function renderProducts(total) {
+  document.querySelector('.card-header span').textContent = `Inventario (${total} equipos)`;
+  const tbody = document.querySelector('tbody');
+  tbody.innerHTML = products.map(p => `
+    <tr>
+      <td><code>${p.serialNumber || 'N/A'}</code></td>
+      <td><strong>${p.name}</strong>${p.description ? '<br><small class="text-muted">' + p.description + '</small>' : ''}</td>
+      <td>${p.category}</td><td>${p.laboratory}</td>
+      <td><span class="badge badge-soft-${p.status === 'disponible' ? 'success' : p.status === 'prestado' ? 'danger' : 'warning'} rounded-pill">${p.status.toUpperCase()}</span></td>
+      <td><code class="small">${p.serialNumber || 'N/A'}</code></td>
+      <td>
+        <div class="d-flex gap-1">
+          <button class="btn btn-outline-secondary btn-sm" title="Editar" onclick="editProduct('${p._id}')"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-outline-danger btn-sm" title="Dar de baja" onclick="deleteProduct('${p._id}')"><i class="bi bi-trash"></i></button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+}
+
+window.guardarEquipo = async function() {
+  let ok = true;
+  const n = document.getElementById('eq-nom');
+  const c = document.getElementById('eq-cod');
+  const cat = document.getElementById('eq-cat');
+  const lab = document.getElementById('eq-lab');
+  
+  n.value.trim().length < 3 ? (n.classList.add('is-invalid'), ok = false) : n.classList.remove('is-invalid');
+  c.value.trim() ? c.classList.remove('is-invalid') : (c.classList.add('is-invalid'), ok = false);
+  cat.value ? cat.classList.remove('is-invalid') : (cat.classList.add('is-invalid'), ok = false);
+  lab.value ? lab.classList.remove('is-invalid') : (lab.classList.add('is-invalid'), ok = false);
+  
+  if (!ok) return;
+
+  try {
+    await createProduct({
+      name: n.value.trim(),
+      serialNumber: c.value.trim(),
+      category: cat.value,
+      laboratory: lab.value,
+      status: 'disponible'
+    });
+    bootstrap.Modal.getInstance(document.getElementById('modalEquipo')).hide();
+    showSuccess('Equipo registrado');
+    n.value = ''; c.value = ''; cat.value = ''; lab.value = '';
+    loadProducts();
+  } catch (error) {
+    showError(error.message || 'Error al registrar');
+  }
+};
+
+window.deleteProduct = async function(id) {
+  if (!confirm('¿Dar de baja este equipo?')) return;
+  try {
+    await deleteProduct(id);
+    showSuccess('Equipo dado de baja');
+    loadProducts();
+  } catch (error) {
+    showError(error.message || 'Error al eliminar');
+  }
+};
+
+window.editProduct = function(id) {
+  const p = products.find(x => x._id === id);
+  if (p) {
+    document.getElementById('eq-nom').value = p.name;
+    document.getElementById('eq-cod').value = p.serialNumber || '';
+    document.getElementById('eq-cat').value = p.category;
+    document.getElementById('eq-lab').value = p.laboratory;
+    bootstrap.Modal.getInstance(document.getElementById('modalEquipo')).show();
+  }
+};
+
+init();
 </script>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="nav.js"></script>
-<script>
-buildNav(sessionStorage.getItem('rol')||'encargado', 'gestion-equipos.html', sessionStorage.getItem('nombre')||'Usuario');
-</script>
 </body></html>

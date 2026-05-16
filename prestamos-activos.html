@@ -98,9 +98,130 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="nav.js"></script>
-<script>
-buildNav(sessionStorage.getItem('rol')||'estudiante','prestamos-activos.html',sessionStorage.getItem('nombre')||'Ana López Torres');
-function cancelar(){if(confirm('¿Cancelar la solicitud #P-2026-044?'))alert('Solicitud cancelada.');}
+<script type="module">
+import { getMyLoans, cancelLoan, getUser, showError, showSuccess } from './api.js';
+
+const user = getUser();
+buildNav(user.role, 'prestamos-activos.html');
+
+async function loadLoans() {
+  try {
+    const result = await getMyLoans('activos', 1, 50);
+    renderLoans(result.data);
+  } catch (error) {
+    showError('Error al cargar préstamos');
+  }
+}
+
+function renderLoans(loans) {
+  const container = document.querySelector('.d-flex.flex-column.gap-4');
+  container.innerHTML = '';
+
+  if (loans.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-5">
+        <div style="font-size:48px;">📦</div>
+        <h5 class="mt-3">No tienes préstamos activos</h5>
+        <p class="text-muted">Solicita equipos en el catálogo</p>
+        <a href="catalogo.html" class="btn btn-accent">Ver Catálogo</a>
+      </div>
+    `;
+    return;
+  }
+
+  let porVencer = 0;
+  const now = new Date();
+
+  loans.forEach(loan => {
+    const fecha = new Date(loan.estimatedReturnDate);
+    const diasRestantes = Math.ceil((fecha - now) / (1000 * 60 * 60 * 24));
+    if (diasRestantes <= 3) porVencer++;
+
+    const borderClass = loan.status === 'ACTIVO' ? 'border-left-danger' : 'border-left-info';
+    const statusLabel = {
+      'PENDIENTE_APROBACION': 'Pendiente de aprobación',
+      'APROBADO': 'Aprobado',
+      'ACTIVO': 'Activo'
+    }[loan.status] || loan.status;
+
+    const statusBadge = {
+      'PENDIENTE_APROBACION': 'badge-soft-info',
+      'APROBADO': 'badge-soft-info',
+      'ACTIVO': 'badge-soft-warning'
+    }[loan.status] || 'badge-soft-secondary';
+
+    const equiposHtml = loan.equipment.map(eq => `
+      <tr>
+        <td><strong>${eq.product?.name || 'Equipo'}</strong></td>
+        <td><code>${eq.product?.serialNumber || 'N/A'}</code></td>
+        <td>${eq.product?.category || '-'}</td>
+        <td><span class="badge badge-soft-warning rounded-pill">${eq.status}</span></td>
+      </tr>
+    `).join('');
+
+    const progress = Math.min(100, Math.max(0, 100 - (diasRestantes / 14 * 100)));
+    const actionButton = loan.status === 'PENDIENTE_APROBACION' 
+      ? `<button class="btn btn-outline-danger btn-sm" onclick="cancelLoan('${loan._id}')"><i class="bi bi-x-circle me-1"></i>Cancelar solicitud</button>`
+      : `<a href="mensajes-estudiante.html" class="btn btn-outline-primary btn-sm"><i class="bi bi-chat-dots me-1"></i>Contactar encargado</a>`;
+
+    const warningAlert = diasRestantes <= 3 && loan.status === 'ACTIVO' 
+      ? `<div class="alert alert-warning d-flex align-items-center gap-2 mb-4"><i class="bi bi-exclamation-triangle-fill"></i><span>Tienes <strong>${porVencer} préstamo</strong> próximo a vencer. Por favor devuelve el equipo a tiempo.</span></div>`
+      : '';
+
+    const html = `
+      ${warningAlert}
+      <div class="card ${borderClass}">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-3">
+            <div>
+              <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                <h6 class="fw-bold mb-0">Préstamo #${loan._id.slice(-6).toUpperCase()}</h6>
+                <span class="badge ${statusBadge} rounded-pill">${statusLabel}</span>
+                ${loan.status === 'ACTIVO' && diasRestantes <= 3 ? '<span class="badge badge-soft-danger rounded-pill">⚠️ Vence en ' + diasRestantes + ' días</span>' : ''}
+              </div>
+              <p class="small text-muted mb-0">Solicitado: ${new Date(loan.createdAt).toLocaleDateString('es-MX')}${loan.managedBy ? ' · Aprobado por: ' + loan.managedBy.name : ''}</p>
+            </div>
+            <code class="small text-muted">#${loan._id.slice(-6).toUpperCase()}</code>
+          </div>
+          <div class="table-responsive mb-3">
+            <table class="table table-sm table-bordered">
+              <thead><tr><th>Equipo</th><th>Código</th><th>Categoría</th><th>Estado</th></tr></thead>
+              <tbody>${equiposHtml}</tbody>
+            </table>
+          </div>
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="d-flex gap-4">
+              ${loan.startDate ? `<div><small class="text-muted d-block">Fecha inicio</small><strong class="font-monospace">${new Date(loan.startDate).toLocaleDateString('es-MX')}</strong></div>` : ''}
+              <div><small class="text-muted d-block">Vencimiento</small><strong class="font-monospace ${diasRestantes <= 3 && loan.status === 'ACTIVO' ? 'text-danger' : ''}">${new Date(loan.estimatedReturnDate).toLocaleDateString('es-MX')}</strong></div>
+              ${loan.status === 'ACTIVO' ? `<div><small class="text-muted d-block">Días restantes</small><strong class="${diasRestantes <= 3 ? 'text-danger' : ''}">${diasRestantes} días</strong></div>` : ''}
+            </div>
+            ${actionButton}
+          </div>
+          ${loan.status === 'ACTIVO' ? `
+          <div class="mt-3">
+            <div class="d-flex justify-content-between small text-muted mb-1"><span>Progreso del préstamo</span><span>${Math.round(progress)}% completado</span></div>
+            <div class="progress loan-progress"><div class="progress-bar ${diasRestantes <= 3 ? 'bg-danger' : 'bg-success'}" style="width:${progress}%"></div></div>
+          </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+    container.innerHTML += html;
+  });
+}
+
+window.cancelLoan = async function(id) {
+  if (!confirm('¿Cancelar esta solicitud?')) return;
+  try {
+    await cancelLoan(id);
+    showSuccess('Solicitud cancelada');
+    loadLoans();
+  } catch (error) {
+    showError(error.message || 'Error al cancelar');
+  }
+};
+
+loadLoans();
 </script>
 </body>
 </html>

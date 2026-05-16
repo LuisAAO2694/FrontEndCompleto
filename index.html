@@ -98,7 +98,9 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
+<script type="module">
+import { login } from './api.js';
+
 document.getElementById('toggle-pass').addEventListener('click', function() {
   const p = document.getElementById('password');
   const ico = document.getElementById('eye-icon');
@@ -106,11 +108,12 @@ document.getElementById('toggle-pass').addEventListener('click', function() {
   else { p.type='password'; ico.className='bi bi-eye'; }
 });
 
-document.getElementById('login-form').addEventListener('submit', function(e) {
+document.getElementById('login-form').addEventListener('submit', async function(e) {
   e.preventDefault();
   const email = document.getElementById('email');
   const pass  = document.getElementById('password');
   const rol   = document.getElementById('rol');
+  const errorMsg = document.getElementById('error-msg');
   let valid = true;
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) { email.classList.add('is-invalid'); valid=false; } else email.classList.remove('is-invalid');
@@ -118,9 +121,17 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
   if (!rol.value) { rol.classList.add('is-invalid'); valid=false; } else rol.classList.remove('is-invalid');
   if (!valid) return;
 
-  sessionStorage.setItem('rol', rol.value);
-  sessionStorage.setItem('nombre', rol.value==='encargado' ? 'Dr. García López' : 'Ana López Torres');
-  window.location.href = rol.value==='encargado' ? 'dashboard-encargado.html' : 'dashboard-estudiante.html';
+  try {
+    const result = await login(email.value.trim(), pass.value);
+
+    sessionStorage.setItem('rol', result.user.role);
+    sessionStorage.setItem('nombre', result.user.name);
+
+    window.location.href = result.user.role === 'encargado' ? 'dashboard-encargado.html' : 'dashboard-estudiante.html';
+  } catch (error) {
+    errorMsg.classList.remove('d-none');
+    setTimeout(() => errorMsg.classList.add('d-none'), 5000);
+  }
 });
 </script>
 </body>

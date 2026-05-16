@@ -28,7 +28,19 @@ const NAV_ENCARGADO = [
   { label: 'Mi Perfil',             icon: 'bi-person-fill',        href: 'perfil.html' },
 ];
 
-function buildNav(role, activePage, userName) {
+function getUserData() {
+  const userStr = sessionStorage.getItem('user');
+  if (userStr) {
+    return JSON.parse(userStr);
+  }
+  return { name: sessionStorage.getItem('nombre') || 'Usuario', role: sessionStorage.getItem('rol') || 'estudiante' };
+}
+
+function buildNav(role, activePage) {
+  const user = getUserData();
+  const userName = user.name;
+  role = role || user.role;
+
   const items   = role === 'encargado' ? NAV_ENCARGADO : NAV_ESTUDIANTE;
   const rolLabel= role === 'encargado' ? 'Encargado' : 'Estudiante';
   const initials= (userName||'US').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -82,5 +94,11 @@ function buildNav(role, activePage, userName) {
 }
 
 function logout() {
-  if (confirm('¿Cerrar sesión?')) { sessionStorage.clear(); window.location.href = 'index.html'; }
+  if (confirm('¿Cerrar sesión?')) {
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('rol');
+    sessionStorage.removeItem('nombre');
+    window.location.href = 'index.html';
+  }
 }

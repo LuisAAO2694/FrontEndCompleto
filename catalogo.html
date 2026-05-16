@@ -259,56 +259,164 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="nav.js"></script>
-<script>
+<script type="module">
+import { getProducts, getCategories, getLaboratories, createLoan, showError, showSuccess } from './api.js';
+
 const rol = sessionStorage.getItem('rol')||'estudiante';
-const nombre = sessionStorage.getItem('nombre')||'Ana López Torres';
-buildNav(rol, 'catalogo.html', nombre);
+buildNav(rol, 'catalogo.html');
 
 const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
 document.getElementById('fecha-dev').min = tomorrow.toISOString().split('T')[0];
 
-function abrirDetalle(nombre,codigo,cat,lab,icon,estado,dias) {
+let productos = [];
+let selectedProduct = null;
+
+async function loadFilters() {
+  try {
+    const [categories, laboratories] = await Promise.all([
+      getCategories(),
+      getLaboratories()
+    ]);
+
+    const catSelect = document.getElementById('filtro-cat');
+    const labSelect = document.getElementById('filtro-lab');
+
+    categories.forEach(cat => {
+      catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+    });
+
+    laboratories.forEach(lab => {
+      labSelect.innerHTML += `<option value="${lab}">${lab}</option>`;
+    });
+  } catch (error) {
+    console.error('Error loading filters:', error);
+  }
+}
+
+async function loadProducts() {
+  try {
+    const filters = {};
+    const search = document.getElementById('buscar').value;
+    const category = document.getElementById('filtro-cat').value;
+    const status = document.getElementById('filtro-estado').value;
+    const laboratory = document.getElementById('filtro-lab').value;
+
+    if (search) filters.search = search;
+    if (category) filters.category = category;
+    if (status) filters.status = status;
+    if (laboratory) filters.laboratory = laboratory;
+
+    const result = await getProducts(filters);
+    productos = result.data;
+    renderProducts();
+    updateCount();
+  } catch (error) {
+    showError('Error al cargar productos');
+  }
+}
+
+function renderProducts() {
+  const grid = document.getElementById('equip-grid');
+  grid.innerHTML = '';
+
+  const icons = {
+    'computo': '💻',
+    'electronica': '🔌',
+    'microcontroladores': '🤖',
+    'default': '📦'
+  };
+
+  productos.forEach(p => {
+    const icon = icons[p.category?.toLowerCase()] || icons['default'];
+    const badgeClass = p.status === 'disponible' ? 'badge-soft-success' : 
+                       p.status === 'prestado' ? 'badge-soft-danger' : 'badge-soft-warning';
+    const btnDisabled = p.status !== 'disponible';
+    const btnText = p.status === 'disponible' ? 'Solicitar' : 
+                    p.status === 'prestado' ? 'No disponible' : 'Mantenimiento';
+
+    grid.innerHTML += `
+      <div class="col-sm-6 col-lg-4 col-xl-3 equip-col" data-cat="${p.category}" data-estado="${p.status.toUpperCase()}" data-nombre="${p.name.toLowerCase()}">
+        <div class="card equip-card h-100" onclick="abrirDetalle('${p._id}', '${p.name}', '${p.serialNumber || 'N/A'}', '${p.category}', '${p.laboratory}', '${icon}', '${p.status}')">
+          <div class="equip-thumb rounded-top">${icon}</div>
+          <div class="card-body pb-2">
+            <h6 class="fw-bold mb-1">${p.name}</h6>
+            <p class="small text-muted mb-2">${p.category} · ${p.laboratory}</p>
+            <span class="badge ${badgeClass} rounded-pill">${p.status.toUpperCase()}</span>
+          </div>
+          <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+            <code class="small text-muted">${p.serialNumber || 'N/A'}</code>
+            <button class="btn btn-accent btn-sm" onclick="event.stopPropagation();abrirSolicitud('${p._id}', '${p.name}')" ${btnDisabled ? 'disabled' : ''}>${btnText}</button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function updateCount() {
+  const disponibles = productos.filter(p => p.status === 'disponible').length;
+  document.querySelector('.badge.bg-success').textContent = `${disponibles} disponibles`;
+}
+
+window.abrirDetalle = function(id, nombre, codigo, cat, lab, icon, estado) {
+  selectedProduct = productos.find(p => p._id === id);
   document.getElementById('det-nombre').textContent = nombre;
   document.getElementById('det-nombre2').textContent = nombre;
   document.getElementById('det-icon').textContent = icon;
-  document.getElementById('det-cat').textContent = cat+' · '+lab;
+  document.getElementById('det-cat').textContent = cat + ' · ' + lab;
   document.getElementById('det-cat2').textContent = cat;
   document.getElementById('det-lab').textContent = lab;
   document.getElementById('det-codigo').textContent = codigo;
-  document.getElementById('det-estado').textContent = estado;
-  document.getElementById('det-dias').textContent = dias+' días';
-  document.getElementById('btn-solicitar-det').onclick = ()=>{ bootstrap.Modal.getInstance(document.getElementById('modalDetalle')).hide(); abrirSolicitud(nombre); };
+  document.getElementById('det-estado').textContent = estado.toUpperCase();
+  document.getElementById('det-dias').textContent = '-';
+  document.getElementById('btn-solicitar-det').onclick = () => {
+    bootstrap.Modal.getInstance(document.getElementById('modalDetalle')).hide();
+    abrirSolicitud(id, nombre);
+  };
   new bootstrap.Modal(document.getElementById('modalDetalle')).show();
-}
+};
 
-function abrirSolicitud(nombre) {
+window.abrirSolicitud = function(id, nombre) {
+  selectedProduct = productos.find(p => p._id === id);
   document.getElementById('equipo-sel').textContent = nombre;
   new bootstrap.Modal(document.getElementById('modalSolicitud')).show();
-}
+};
 
-function enviarSolicitud() {
+window.enviarSolicitud = async function() {
   const f = document.getElementById('fecha-dev');
+  const notes = document.querySelector('#modalSolicitud textarea').value;
+  
   if (!f.value) { f.classList.add('is-invalid'); return; }
   f.classList.remove('is-invalid');
-  bootstrap.Modal.getInstance(document.getElementById('modalSolicitud')).hide();
-  window.location.href = 'prestamos-activos.html';
-}
 
-function filterEquipos() {
-  const q = document.getElementById('buscar').value.toLowerCase();
-  const cat = document.getElementById('filtro-cat').value;
-  const est = document.getElementById('filtro-estado').value;
-  document.querySelectorAll('.equip-col').forEach(col => {
-    const m1 = col.dataset.nombre.includes(q);
-    const m2 = !cat || col.dataset.cat === cat;
-    const m3 = !est || col.dataset.estado === est;
-    col.style.display = (m1&&m2&&m3) ? '' : 'none';
-  });
-}
-function clearFilters() {
-  ['buscar','filtro-cat','filtro-estado','filtro-lab'].forEach(id=>document.getElementById(id).value='');
-  filterEquipos();
-}
+  try {
+    await createLoan({
+      equipment: [{ product: selectedProduct._id, observations: notes }],
+      estimatedReturnDate: f.value,
+      notes: notes
+    });
+    bootstrap.Modal.getInstance(document.getElementById('modalSolicitud')).hide();
+    showSuccess('Solicitud enviada correctamente');
+    setTimeout(() => window.location.href = 'prestamos-activos.html', 2000);
+  } catch (error) {
+    showError(error.message || 'Error al enviar solicitud');
+  }
+};
+
+window.filterEquipos = function() {
+  loadProducts();
+};
+
+window.clearFilters = function() {
+  document.getElementById('buscar').value = '';
+  document.getElementById('filtro-cat').value = '';
+  document.getElementById('filtro-estado').value = '';
+  document.getElementById('filtro-lab').value = '';
+  loadProducts();
+};
+
+loadFilters();
+loadProducts();
 </script>
 </body>
 </html>

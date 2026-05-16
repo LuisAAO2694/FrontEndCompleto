@@ -75,14 +75,44 @@
       </div>
     </div>
   </div>
-<script>
-function ap(btn){const c=btn.closest('.border');c.querySelector('.badge').className='badge badge-soft-success rounded-pill';c.querySelector('.badge').textContent='APROBADO ✓';c.querySelectorAll('button').forEach(b=>b.remove());c.className='border rounded-3 p-3 border-left-success';}
-function re(btn){const c=btn.closest('.border');c.querySelector('.badge').className='badge badge-soft-danger rounded-pill';c.querySelector('.badge').textContent='RECHAZADO';c.querySelectorAll('button').forEach(b=>b.remove());c.className='border rounded-3 p-3 border-left-danger';}
+<script type="module">
+import { getLoans, getProducts, getUser } from './api.js';
+
+const user = getUser();
+buildNav(user.role, 'dashboard-encargado.html');
+
+async function loadStats() {
+  try {
+    const [pendientes, activos, productos] = await Promise.all([
+      getLoans({ status: 'PENDIENTE_APROBACION' }),
+      getLoans({ status: 'ACTIVO' }),
+      getProducts({})
+    ]);
+
+    document.querySelectorAll('.stat-card')[0].querySelector('.stat-num').textContent = pendientes.data.length;
+    document.querySelectorAll('.stat-card')[1].querySelector('.stat-num').textContent = activos.data.length;
+
+    const disponibles = productos.data.filter(p => p.status === 'disponible').length;
+    const total = productos.data.length;
+    document.querySelectorAll('.col-md-3')[0].querySelector('strong').textContent = `${disponibles}/${total}`;
+    document.querySelectorAll('.col-md-3')[0].querySelector('.progress-bar').style.width = `${(disponibles/total)*100}%`;
+
+    const prestados = productos.data.filter(p => p.status === 'prestado').length;
+    document.querySelectorAll('.col-md-3')[1].querySelector('strong').textContent = `${prestados}/${total}`;
+    document.querySelectorAll('.col-md-3')[1].querySelector('.progress-bar').style.width = `${(prestados/total)*100}%`;
+
+    const mantenimiento = productos.data.filter(p => p.status === 'mantenimiento').length;
+    document.querySelectorAll('.col-md-3')[2].querySelector('strong').textContent = `${mantenimiento}/${total}`;
+    document.querySelectorAll('.col-md-3')[2].querySelector('.progress-bar').style.width = `${(mantenimiento/total)*100}%`;
+
+  } catch (error) {
+    console.error('Error loading stats:', error);
+  }
+}
+
+loadStats();
 </script>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="nav.js"></script>
-<script>
-buildNav(sessionStorage.getItem('rol')||'encargado', 'dashboard-encargado.html', sessionStorage.getItem('nombre')||'Usuario');
-</script>
 </body></html>

@@ -67,7 +67,46 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="nav.js"></script>
-<script>
-buildNav(sessionStorage.getItem('rol')||'rol', 'historial-prestamos.html', sessionStorage.getItem('nombre')||'Usuario');
+<script type="module">
+import { getMyLoans, getUser } from './api.js';
+
+const user = getUser();
+buildNav(user.role, 'historial-prestamos.html');
+
+async function loadHistorial() {
+  try {
+    const result = await getMyLoans('historial', 1, 50);
+    renderHistorial(result.data);
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+function renderHistorial(loans) {
+  const tbody = document.querySelector('tbody');
+  document.querySelector('.card-header span').textContent = `Historial Completo (${loans.length} registros)`;
+  
+  tbody.innerHTML = loans.map(loan => {
+    const statusClass = {
+      'FINALIZADO': 'badge-soft-success',
+      'RECHAZADO': 'badge-soft-danger',
+      'CANCELADO': 'badge-soft-muted',
+      'PARCIALMENTE_DEVUELTO': 'badge-soft-warning'
+    }[loan.status] || 'badge-soft-secondary';
+    
+    return `<tr>
+      <td><code>#${loan._id.slice(-6).toUpperCase()}</code></td>
+      <td>${loan.equipment.map(e => e.product?.name || 'Equipo').join(', ')}</td>
+      <td>${loan.equipment[0]?.product?.category || '-'}</td>
+      <td>${new Date(loan.createdAt).toLocaleDateString('es-MX')}</td>
+      <td>${loan.actualReturnDate ? new Date(loan.actualReturnDate).toLocaleDateString('es-MX') : '—'}</td>
+      <td><span class="badge ${statusClass} rounded-pill">${loan.status}</span></td>
+      <td>—</td>
+      <td><button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHist">Ver</button></td>
+    </tr>`;
+  }).join('');
+}
+
+loadHistorial();
 </script>
 </body></html>

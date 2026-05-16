@@ -72,21 +72,71 @@
       </div>
     </div>
   </div>
-<script>
-document.getElementById('profile-form').addEventListener('submit',function(e){e.preventDefault();let ok=true;
-  const n=document.getElementById('pnombre');n.value.trim().length<3?(n.classList.add('is-invalid'),ok=false):n.classList.remove('is-invalid');
-  const em=document.getElementById('pemail');/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value)?em.classList.remove('is-invalid'):(em.classList.add('is-invalid'),ok=false);
-  const pn=document.getElementById('pnew'),pc=document.getElementById('pconf');
-  if(pn.value){if(!/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(pn.value)){pn.classList.add('is-invalid');ok=false;}else pn.classList.remove('is-invalid');
-  if(pc.value!==pn.value){pc.classList.add('is-invalid');ok=false;}else pc.classList.remove('is-invalid');}
-  if(!ok)return;
-  const m=document.getElementById('ok-msg');m.classList.remove('d-none');setTimeout(()=>m.classList.add('d-none'),3000);
+<script type="module">
+import { getProfile, getUser, showError, showSuccess } from './api.js';
+
+const user = getUser();
+buildNav(user.role, 'perfil.html');
+
+async function loadProfile() {
+  try {
+    const profile = await getProfile();
+    renderProfile(profile);
+  } catch (error) {
+    console.error('Error loading profile:', error);
+  }
+}
+
+function renderProfile(profile) {
+  document.querySelector('.rounded-circle').textContent = profile.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  document.querySelector('.card-body > h5').textContent = profile.name;
+  document.querySelector('.card-body > p').textContent = profile.email;
+  document.querySelector('.badge.badge-soft-info').textContent = profile.role === 'encargado' ? 'ENCARGADO' : 'ESTUDIANTE';
+
+  document.getElementById('pnombre').value = profile.name;
+  document.getElementById('pemail').value = profile.email;
+
+  const listItems = document.querySelectorAll('.list-group-item');
+  listItems[0].querySelector('code').textContent = profile.studentId || 'N/A';
+  listItems[1].querySelector('span:last-child').textContent = profile.career || 'N/A';
+  listItems[2].querySelector('code').textContent = profile.phone || 'N/A';
+  listItems[3].querySelector('span:last-child').textContent = new Date(profile.createdAt).toLocaleDateString('es-MX', { month: 'short', year: 'numeric' });
+
+  document.getElementById('ptel').value = profile.phone || '';
+  if (profile.career) {
+    document.querySelector('select').value = profile.career;
+  }
+}
+
+document.getElementById('profile-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  let ok = true;
+  const n = document.getElementById('pnombre');
+  const em = document.getElementById('pemail');
+  const pn = document.getElementById('pnew');
+  const pc = document.getElementById('pconf');
+
+  n.value.trim().length < 3 ? (n.classList.add('is-invalid'), ok = false) : n.classList.remove('is-invalid');
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value) ? em.classList.remove('is-invalid') : (em.classList.add('is-invalid'), ok = false);
+
+  if (pn.value) {
+    if (!/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(pn.value)) {
+      pn.classList.add('is-invalid');
+      ok = false;
+    } else pn.classList.remove('is-invalid');
+    if (pc.value !== pn.value) {
+      pc.classList.add('is-invalid');
+      ok = false;
+    } else pc.classList.remove('is-invalid');
+  }
+
+  if (!ok) return;
+  showSuccess('Perfil actualizado correctamente');
 });
+
+loadProfile();
 </script>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="nav.js"></script>
-<script>
-buildNav(sessionStorage.getItem('rol')||'rol', 'perfil.html', sessionStorage.getItem('nombre')||'Usuario');
-</script>
 </body></html>

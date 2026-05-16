@@ -101,28 +101,123 @@
       <div class="invalid-feedback">La razón es requerida.</div></div>
   </div>
   <div class="modal-footer border-0">
-    <button class="btn btn-danger" onclick="confirmarRechazo()">Confirmar Rechazo</button>
+    <button class="btn btn-danger" id="confirmRejectBtn">Confirmar Rechazo</button>
     <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
   </div>
 </div></div></div>
-<script>
-function aprobar(i,folio){
-  document.getElementById('card-'+i).className='card border-left-success';
-  document.getElementById('badge-'+i).className='badge badge-soft-success rounded-pill';
-  document.getElementById('badge-'+i).textContent='APROBADO ✓';
-  document.getElementById('btns-'+i).innerHTML='<div class="alert alert-success small mb-0"><i class="bi bi-check-circle me-1"></i>Solicitud '+folio+' aprobada. Equipos asignados.</div>';
-}
-function confirmarRechazo(){
-  const r=document.getElementById('razon');
-  if(!r.value.trim()){r.classList.add('is-invalid');return;}
-  bootstrap.Modal.getInstance(document.getElementById('modalRechazo')).hide();
-  alert('Solicitud rechazada. El estudiante fue notificado.');
-}
-</script>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="nav.js"></script>
-<script>
-buildNav(sessionStorage.getItem('rol')||'encargado', 'solicitudes.html', sessionStorage.getItem('nombre')||'Usuario');
+<script type="module">
+import { getLoans, approveLoan, rejectLoan, getUser, showError, showSuccess } from './api.js';
+
+const user = getUser();
+buildNav(user.role, 'solicitudes.html');
+
+let selectedLoanId = null;
+
+async function loadSolicitudes() {
+  try {
+    const result = await getLoans({ status: 'PENDIENTE_APROBACION' });
+    renderSolicitudes(result.data);
+  } catch (error) {
+    showError('Error al cargar solicitudes');
+  }
+}
+
+function renderSolicitudes(loans) {
+  const container = document.querySelector('.d-flex.flex-column.gap-4');
+  container.innerHTML = '';
+
+  document.querySelector('.badge.bg-warning').textContent = `⏳ ${loans.length} pendientes`;
+
+  if (loans.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-5">
+        <div style="font-size:48px;">✅</div>
+        <h5 class="mt-3">No hay solicitudes pendientes</h5>
+        <p class="text-muted">Las nuevas solicitudes aparecerán aquí</p>
+      </div>
+    `;
+    return;
+  }
+
+  loans.forEach((loan, index) => {
+    const equiposHtml = loan.equipment.map(eq => `
+      <tr>
+        <td><strong>${eq.product?.name || 'Equipo'}</strong></td>
+        <td><code>${eq.product?.serialNumber || 'N/A'}</code></td>
+        <td>${eq.product?.category || '-'}</td>
+        <td><span class="badge badge-soft-success rounded-pill">DISPONIBLE ✓</span></td>
+      </tr>
+    `).join('');
+
+    const html = `
+    <div class="card border-left-warning" id="card-${index}">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+          <div>
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+              <h6 class="fw-bold mb-0">Solicitud #${loan._id.slice(-6).toUpperCase()}</h6>
+              <span class="badge badge-soft-warning rounded-pill" id="badge-${index}">PENDIENTE DE APROBACIÓN</span>
+            </div>
+            <div class="small text-muted">👤 <strong>${loan.student?.name || 'Estudiante'}</strong>${loan.student?.studentId ? ' (' + loan.student.studentId + ')' : ''} · 📅 Solicitado: ${new Date(loan.createdAt).toLocaleDateString('es-MX')} · 📦 Vence: ${new Date(loan.estimatedReturnDate).toLocaleDateString('es-MX')}</div>
+          </div>
+        </div>
+        <div class="table-responsive mb-3">
+          <table class="table table-sm table-bordered mb-0">
+            <thead><tr><th>Equipo</th><th>Código</th><th>Categoría</th><th>Disponibilidad</th></tr></thead>
+            <tbody>${equiposHtml}</tbody>
+          </table>
+        </div>
+        <div class="p-2 rounded mb-3" style="background:#f7f9fb;border:1px solid #dde3ea;font-size:13.5px;">${loan.notes || 'Sin descripción'}</div>
+        <div class="d-flex gap-2" id="btns-${index}">
+          <button class="btn btn-success btn-sm" onclick="aprobar('${loan._id}', ${index})"><i class="bi bi-check-lg me-1"></i>Aprobar Solicitud</button>
+          <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalRechazo" onclick="selectLoanForReject('${loan._id}')"><i class="bi bi-x-lg me-1"></i>Rechazar</button>
+          <a href="mensajes-encargado.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-chat-dots me-1"></i>Contactar</a>
+        </div>
+      </div>
+    </div>
+    `;
+    container.innerHTML += html;
+  });
+}
+
+window.aprobar = async function(id, index) {
+  try {
+    await approveLoan(id);
+    document.getElementById('card-' + index).className = 'card border-left-success';
+    document.getElementById('badge-' + index).className = 'badge badge-soft-success rounded-pill';
+    document.getElementById('badge-' + index).textContent = 'APROBADO ✓';
+    document.getElementById('btns-' + index).innerHTML = '<div class="alert alert-success small mb-0"><i class="bi bi-check-circle me-1"></i>Solicitud aprobada. Equipos asignados.</div>';
+    showSuccess('Solicitud aprobada');
+  } catch (error) {
+    showError(error.message || 'Error al aprobar');
+  }
+};
+
+window.selectLoanForReject = function(id) {
+  selectedLoanId = id;
+};
+
+document.getElementById('confirmRejectBtn').addEventListener('click', async function() {
+  const razon = document.getElementById('razon');
+  if (!razon.value.trim()) {
+    razon.classList.add('is-invalid');
+    return;
+  }
+
+  try {
+    await rejectLoan(selectedLoanId, razon.value.trim());
+    bootstrap.Modal.getInstance(document.getElementById('modalRechazo')).hide();
+    showSuccess('Solicitud rechazada');
+    loadSolicitudes();
+    razon.value = '';
+  } catch (error) {
+    showError(error.message || 'Error al rechazar');
+  }
+});
+
+loadSolicitudes();
 </script>
 </body></html>
