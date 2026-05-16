@@ -1,15 +1,15 @@
 const API_URL = 'http://localhost:3000/api';
 
-function getToken() {
+export function getToken() {
     return sessionStorage.getItem('token');
 }
 
-function getUser() {
+export function getUser() {
     const user = sessionStorage.getItem('user');
     return user ? JSON.parse(user) : null;
 }
 
-function getRole() {
+export function getRole() {
     const user = getUser();
     return user ? user.role : null;
 }
@@ -31,7 +31,10 @@ async function request(endpoint, options = {}) {
         const data = await response.json();
 
         if (!response.ok) {
-            throw { status: response.status, ...data };
+            const err = new Error(data.message || 'Error en la solicitud');
+            err.status = response.status;
+            err.data = data;
+            throw err;
         }
 
         return data;
@@ -326,4 +329,13 @@ export function getEquipmentStatusClass(status) {
         'NO_DEVUELTO': 'danger'
     };
     return classes[status] || 'secondary';
+}
+
+export function checkRole(requiredRole) {
+    const user = getUser();
+    if (!user || user.role !== requiredRole) {
+        window.location.href = 'index.html';
+        return false;
+    }
+    return true;
 }

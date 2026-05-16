@@ -24,7 +24,7 @@
             <label class="form-label small fw-semibold text-muted text-uppercase">Buscar equipo</label>
             <div class="input-group">
               <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
-              <input type="text" id="buscar" class="form-control" placeholder="Osciloscopio, multímetro..." oninput="filterEquipos()">
+              <input type="text" id="buscar" class="form-control" placeholder="Osciloscopio, multímetro..." onkeyup="debounceFilter()">
             </div>
           </div>
           <div class="col-md-2">
@@ -39,9 +39,9 @@
             <label class="form-label small fw-semibold text-muted text-uppercase">Estado</label>
             <select class="form-select" id="filtro-estado" onchange="filterEquipos()">
               <option value="">Todos</option>
-              <option value="DISPONIBLE">Disponible</option>
-              <option value="PRESTADO">Prestado</option>
-              <option value="MANTENIMIENTO">Mantenimiento</option>
+              <option value="disponible">Disponible</option>
+              <option value="prestado">Prestado</option>
+              <option value="mantenimiento">Mantenimiento</option>
             </select>
           </div>
           <div class="col-md-2">
@@ -60,137 +60,12 @@
 
     <!-- Grid -->
     <div class="row g-3" id="equip-grid">
-
-      <div class="col-sm-6 col-lg-4 col-xl-3 equip-col" data-cat="Instrumentación" data-estado="DISPONIBLE" data-nombre="osciloscopio digital">
-        <div class="card equip-card h-100" onclick="abrirDetalle('Osciloscopio Digital DS1054Z','LAB-EQ-00025','Instrumentación','Lab. Electrónica','📡','DISPONIBLE','14')">
-          <div class="equip-thumb rounded-top">📡</div>
-          <div class="card-body pb-2">
-            <h6 class="fw-bold mb-1">Osciloscopio Digital</h6>
-            <p class="small text-muted mb-2">Instrumentación · Lab. Electrónica</p>
-            <span class="badge badge-soft-success rounded-pill">DISPONIBLE</span>
-          </div>
-          <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
-            <code class="small text-muted">LAB-EQ-00025</code>
-            <button class="btn btn-accent btn-sm" onclick="event.stopPropagation();abrirSolicitud('Osciloscopio Digital')">Solicitar</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-sm-6 col-lg-4 col-xl-3 equip-col" data-cat="Instrumentación" data-estado="DISPONIBLE" data-nombre="multímetro fluke">
-        <div class="card equip-card h-100" onclick="abrirDetalle('Multímetro Fluke 117','LAB-EQ-00120','Instrumentación','Lab. Electrónica','🔌','DISPONIBLE','14')">
-          <div class="equip-thumb rounded-top">🔌</div>
-          <div class="card-body pb-2">
-            <h6 class="fw-bold mb-1">Multímetro Fluke 117</h6>
-            <p class="small text-muted mb-2">Instrumentación · Lab. Electrónica</p>
-            <span class="badge badge-soft-success rounded-pill">DISPONIBLE</span>
-          </div>
-          <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
-            <code class="small text-muted">LAB-EQ-00120</code>
-            <button class="btn btn-accent btn-sm" onclick="event.stopPropagation();abrirSolicitud('Multímetro Fluke 117')">Solicitar</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-sm-6 col-lg-4 col-xl-3 equip-col" data-cat="Microcontroladores" data-estado="DISPONIBLE" data-nombre="arduino mega">
-        <div class="card equip-card h-100" onclick="abrirDetalle('Arduino Mega 2560','LAB-EQ-00210','Microcontroladores','Lab. Microcontroladores','🤖','DISPONIBLE','7')">
-          <div class="equip-thumb rounded-top">🤖</div>
-          <div class="card-body pb-2">
-            <h6 class="fw-bold mb-1">Arduino Mega 2560</h6>
-            <p class="small text-muted mb-2">Microcontroladores · Lab. Microcontroladores</p>
-            <span class="badge badge-soft-success rounded-pill">DISPONIBLE</span>
-          </div>
-          <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
-            <code class="small text-muted">LAB-EQ-00210</code>
-            <button class="btn btn-accent btn-sm" onclick="event.stopPropagation();abrirSolicitud('Arduino Mega 2560')">Solicitar</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-sm-6 col-lg-4 col-xl-3 equip-col" data-cat="Microcontroladores" data-estado="PRESTADO" data-nombre="raspberry pi 4">
-        <div class="card equip-card h-100">
-          <div class="equip-thumb rounded-top" style="opacity:.7;">💻</div>
-          <div class="card-body pb-2">
-            <h6 class="fw-bold mb-1">Raspberry Pi 4 (4GB)</h6>
-            <p class="small text-muted mb-2">Microcontroladores · Lab. Microcontroladores</p>
-            <span class="badge badge-soft-danger rounded-pill">PRESTADO</span>
-          </div>
-          <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
-            <code class="small text-muted">LAB-EQ-00215</code>
-            <button class="btn btn-outline-secondary btn-sm" disabled>No disponible</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-sm-6 col-lg-4 col-xl-3 equip-col" data-cat="Herramientas" data-estado="DISPONIBLE" data-nombre="estación de soldadura">
-        <div class="card equip-card h-100" onclick="abrirDetalle('Estación de Soldadura','LAB-EQ-00305','Herramientas','Lab. Electrónica','🔧','DISPONIBLE','3')">
-          <div class="equip-thumb rounded-top">🔧</div>
-          <div class="card-body pb-2">
-            <h6 class="fw-bold mb-1">Estación de Soldadura</h6>
-            <p class="small text-muted mb-2">Herramientas · Lab. Electrónica</p>
-            <span class="badge badge-soft-success rounded-pill">DISPONIBLE</span>
-          </div>
-          <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
-            <code class="small text-muted">LAB-EQ-00305</code>
-            <button class="btn btn-accent btn-sm" onclick="event.stopPropagation();abrirSolicitud('Estación de Soldadura')">Solicitar</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-sm-6 col-lg-4 col-xl-3 equip-col" data-cat="Instrumentación" data-estado="MANTENIMIENTO" data-nombre="fuente de poder variable">
-        <div class="card equip-card h-100" style="opacity:.8;">
-          <div class="equip-thumb rounded-top" style="opacity:.6;">⚡</div>
-          <div class="card-body pb-2">
-            <h6 class="fw-bold mb-1">Fuente de Poder Variable</h6>
-            <p class="small text-muted mb-2">Instrumentación · Lab. Electrónica</p>
-            <span class="badge badge-soft-warning rounded-pill">MANTENIMIENTO</span>
-          </div>
-          <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
-            <code class="small text-muted">LAB-EQ-00088</code>
-            <button class="btn btn-outline-secondary btn-sm" disabled>Mantenimiento</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-sm-6 col-lg-4 col-xl-3 equip-col" data-cat="Componentes" data-estado="DISPONIBLE" data-nombre="kit sensores iot">
-        <div class="card equip-card h-100" onclick="abrirDetalle('Kit de Sensores IoT','LAB-EQ-00412','Componentes','Lab. Microcontroladores','📟','DISPONIBLE','10')">
-          <div class="equip-thumb rounded-top">📟</div>
-          <div class="card-body pb-2">
-            <h6 class="fw-bold mb-1">Kit de Sensores IoT</h6>
-            <p class="small text-muted mb-2">Componentes · Lab. Microcontroladores</p>
-            <span class="badge badge-soft-success rounded-pill">DISPONIBLE</span>
-          </div>
-          <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
-            <code class="small text-muted">LAB-EQ-00412</code>
-            <button class="btn btn-accent btn-sm" onclick="event.stopPropagation();abrirSolicitud('Kit de Sensores IoT')">Solicitar</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-sm-6 col-lg-4 col-xl-3 equip-col" data-cat="Computación" data-estado="DISPONIBLE" data-nombre="laptop thinkpad">
-        <div class="card equip-card h-100" onclick="abrirDetalle('Laptop ThinkPad E15','LAB-EQ-00510','Computación','Lab. Cómputo','💼','DISPONIBLE','5')">
-          <div class="equip-thumb rounded-top">💼</div>
-          <div class="card-body pb-2">
-            <h6 class="fw-bold mb-1">Laptop ThinkPad E15</h6>
-            <p class="small text-muted mb-2">Computación · Lab. Cómputo</p>
-            <span class="badge badge-soft-success rounded-pill">DISPONIBLE</span>
-          </div>
-          <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
-            <code class="small text-muted">LAB-EQ-00510</code>
-            <button class="btn btn-accent btn-sm" onclick="event.stopPropagation();abrirSolicitud('Laptop ThinkPad E15')">Solicitar</button>
-          </div>
-        </div>
-      </div>
-
+      <p class="text-center text-muted py-5">Cargando equipos...</p>
     </div><!-- row -->
 
     <!-- Pagination -->
     <nav class="mt-4 d-flex justify-content-center">
-      <ul class="pagination pagination-sm">
-        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-        <li class="page-item"><a class="page-link" href="#">2</a></li>
-        <li class="page-item"><a class="page-link" href="#">3</a></li>
-        <li class="page-item"><a class="page-link" href="#">›</a></li>
-      </ul>
+      <ul class="pagination pagination-sm" id="paginacion"></ul>
     </nav>
   </div>
 </div>
@@ -257,19 +132,24 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="nav.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module">
 import { getProducts, getCategories, getLaboratories, createLoan, showError, showSuccess } from './api.js';
 
-const rol = sessionStorage.getItem('rol')||'estudiante';
-buildNav(rol, 'catalogo.html');
+const rol = sessionStorage.getItem('rol');
+if (rol !== 'estudiante') {
+    window.location.href = 'index.html';
+}
+
+buildNav(rol || 'estudiante', 'catalogo.html');
 
 const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
 document.getElementById('fecha-dev').min = tomorrow.toISOString().split('T')[0];
 
 let productos = [];
 let selectedProduct = null;
+let currentPage = 1;
 
 async function loadFilters() {
   try {
@@ -305,15 +185,39 @@ async function loadProducts() {
     if (category) filters.category = category;
     if (status) filters.status = status;
     if (laboratory) filters.laboratory = laboratory;
+    filters.page = currentPage;
+    filters.limit = 12;
 
     const result = await getProducts(filters);
     productos = result.data;
     renderProducts();
     updateCount();
+    renderPagination(result.total);
   } catch (error) {
     showError('Error al cargar productos');
   }
 }
+
+function renderPagination(total) {
+  const totalPages = Math.ceil(total / 12);
+  const pag = document.getElementById('paginacion');
+  if (totalPages <= 1) {
+    pag.innerHTML = '';
+    return;
+  }
+  
+  let html = `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage - 1})">‹</a></li>`;
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<li class="page-item ${currentPage === i ? 'active' : ''}"><a class="page-link" href="#" onclick="changePage(${i})">${i}</a></li>`;
+  }
+  html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage + 1})">›</a></li>`;
+  pag.innerHTML = html;
+}
+
+window.changePage = function(page) {
+  currentPage = page;
+  loadProducts();
+};
 
 function renderProducts() {
   const grid = document.getElementById('equip-grid');
@@ -404,7 +308,17 @@ window.enviarSolicitud = async function() {
 };
 
 window.filterEquipos = function() {
+  currentPage = 1;
   loadProducts();
+};
+
+let debounceTimer;
+window.debounceFilter = function() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    currentPage = 1;
+    loadProducts();
+  }, 300);
 };
 
 window.clearFilters = function() {
@@ -412,6 +326,7 @@ window.clearFilters = function() {
   document.getElementById('filtro-cat').value = '';
   document.getElementById('filtro-estado').value = '';
   document.getElementById('filtro-lab').value = '';
+  currentPage = 1;
   loadProducts();
 };
 

@@ -44,8 +44,8 @@
       <p class="text-muted small">Ingresa tus credenciales para continuar</p>
     </div>
 
-    <div id="error-msg" class="alert alert-danger d-none align-items-center gap-2" role="alert">
-      <i class="bi bi-exclamation-triangle-fill"></i> Correo, contraseña o rol incorrectos.
+    <div id="error-msg" class="alert alert-danger" role="alert" style="display: none; align-items: center; gap: 0.5rem;">
+      <i class="bi bi-exclamation-triangle-fill"></i> <span id="error-text">Correo, contraseña o rol incorrectos.</span>
     </div>
 
     <form id="login-form" novalidate>
@@ -129,8 +129,13 @@ document.getElementById('login-form').addEventListener('submit', async function(
 
     window.location.href = result.user.role === 'encargado' ? 'dashboard-encargado.html' : 'dashboard-estudiante.html';
   } catch (error) {
-    errorMsg.classList.remove('d-none');
-    setTimeout(() => errorMsg.classList.add('d-none'), 5000);
+    let msg = 'Credenciales incorrectas. Por favor verifica tu correo, contraseña y rol.';
+    if (error?.message) {
+      msg = error.message;
+    } else if (error?.data?.message) {
+      msg = error.data.message;
+    }
+    alert(msg);
   }
 });
 </script>

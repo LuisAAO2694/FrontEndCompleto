@@ -94,9 +94,12 @@ function guardarCat(){let ok=true;
 }
 </script>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="nav.js"></script>
 <script>
-buildNav(sessionStorage.getItem('rol')||'encargado', 'categorias.html', sessionStorage.getItem('nombre')||'Usuario');
+const rol = sessionStorage.getItem('rol');
+if (rol !== 'encargado') {
+    window.location.href = 'index.html';
+}
+buildNav(rol || 'encargado', 'categorias.html', sessionStorage.getItem('nombre')||'Usuario');
 </script>
 </body></html>

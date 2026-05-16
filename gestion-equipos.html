@@ -12,158 +12,73 @@
 <div class="main-content">
   <div class="topbar d-flex align-items-center justify-content-between">
     <div><h5 class="fw-bold mb-0">Gestión de Equipos</h5><p class="small text-muted mb-0">Catálogo completo del laboratorio</p></div>
-    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEquipo"><i class="bi bi-plus-lg me-1"></i>Nuevo Equipo</button>
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEquipo" onclick="resetForm()"><i class="bi bi-plus-lg me-1"></i>Nuevo Equipo</button>
   </div>
   <div class="p-4">
     <div class="card mb-4"><div class="card-body">
       <div class="row g-2 align-items-end">
-        <div class="col-md-4"><div class="input-group"><span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span><input type="text" class="form-control" placeholder="Nombre, código, serie..."></div></div>
-        <div class="col-md-2"><select class="form-select"><option value="">Categoría</option><option>Instrumentación</option><option>Microcontroladores</option><option>Computación</option></select></div>
-        <div class="col-md-2"><select class="form-select"><option value="">Estado</option><option>DISPONIBLE</option><option>PRESTADO</option><option>MANTENIMIENTO</option><option>BAJA</option></select></div>
-        <div class="col-md-2"><select class="form-select"><option value="">Laboratorio</option><option>Lab. Electrónica</option><option>Lab. Cómputo</option><option>Lab. Microcontroladores</option></select></div>
-        <div class="col-md-2"><button class="btn btn-outline-secondary w-100"><i class="bi bi-download me-1"></i>Exportar</button></div>
+        <div class="col-md-4"><div class="input-group"><span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span><input type="text" id="buscar" class="form-control" placeholder="Nombre, código, serie..." onkeyup="debounceFilter()"></div></div>
+        <div class="col-md-2"><select class="form-select" id="filtro-cat" onchange="filterProducts()"><option value="">Categoría</option></select></div>
+        <div class="col-md-2"><select class="form-select" id="filtro-estado" onchange="filterProducts()"><option value="">Estado</option><option value="disponible">Disponible</option><option value="prestado">Prestado</option><option value="mantenimiento">Mantenimiento</option></select></div>
+        <div class="col-md-2"><select class="form-select" id="filtro-lab" onchange="filterProducts()"><option value="">Laboratorio</option></select></div>
+        <div class="col-md-2 d-flex gap-2">
+          <button class="btn btn-outline-secondary flex-fill" onclick="clearFilters()"><i class="bi bi-x-circle me-1"></i>Limpiar</button>
+        </div>
       </div>
     </div></div>
-    <div class="card"><div class="card-header py-3 px-4"><span class="fw-bold"><i class="bi bi-cpu-fill me-2 text-primary"></i>Inventario (52 equipos)</span></div>
+    <div class="card"><div class="card-header py-3 px-4"><span class="fw-bold"><i class="bi bi-cpu-fill me-2 text-primary"></i>Inventario (<span id="total-equipos">0</span> equipos)</span></div>
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
         <thead><tr><th>Código</th><th>Nombre / Modelo</th><th>Categoría</th><th>Laboratorio</th><th>Estado</th><th>No. Serie</th><th>Acciones</th></tr></thead>
-        <tbody>
-          
-          <tr>
-            <td><code>LAB-EQ-00025</code></td>
-            <td><strong>Osciloscopio Digital</strong><br><small class="text-muted">Rigol DS1054Z</small></td>
-            <td>Instrumentación</td><td>Lab. Electrónica</td>
-            <td><span class="badge badge-soft-success rounded-pill">DISPONIBLE</span></td>
-            <td><code class="small">DS1054Z-21A0453</code></td>
-            <td>
-              <div class="d-flex gap-1">
-                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEquipo" title="Editar"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEstado" title="Estado"><i class="bi bi-arrow-repeat"></i></button>
-                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHistorial" title="Historial"><i class="bi bi-clock-history"></i></button>
-                <button class="btn btn-outline-danger btn-sm" onclick="darBaja()" title="Dar de baja"><i class="bi bi-trash"></i></button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td><code>LAB-EQ-00120</code></td>
-            <td><strong>Multímetro Fluke 117</strong><br><small class="text-muted">Fluke 117</small></td>
-            <td>Instrumentación</td><td>Lab. Electrónica</td>
-            <td><span class="badge badge-soft-success rounded-pill">DISPONIBLE</span></td>
-            <td><code class="small">FL117-A8821</code></td>
-            <td>
-              <div class="d-flex gap-1">
-                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEquipo" title="Editar"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEstado" title="Estado"><i class="bi bi-arrow-repeat"></i></button>
-                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHistorial" title="Historial"><i class="bi bi-clock-history"></i></button>
-                <button class="btn btn-outline-danger btn-sm" onclick="darBaja()" title="Dar de baja"><i class="bi bi-trash"></i></button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td><code>LAB-EQ-00215</code></td>
-            <td><strong>Raspberry Pi 4 (4GB)</strong><br><small class="text-muted">Raspberry Pi Foundation</small></td>
-            <td>Microcontroladores</td><td>Lab. Microcontroladores</td>
-            <td><span class="badge badge-soft-danger rounded-pill">PRESTADO</span></td>
-            <td><code class="small">RPI4-2021-001</code></td>
-            <td>
-              <div class="d-flex gap-1">
-                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEquipo" title="Editar"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEstado" title="Estado"><i class="bi bi-arrow-repeat"></i></button>
-                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHistorial" title="Historial"><i class="bi bi-clock-history"></i></button>
-                <button class="btn btn-outline-danger btn-sm" onclick="darBaja()" title="Dar de baja"><i class="bi bi-trash"></i></button>
-              </div>
-            </td>
-          </tr>
-          <tr>
-            <td><code>LAB-EQ-00088</code></td>
-            <td><strong>Fuente de Poder Variable</strong><br><small class="text-muted">BK Precision 9130B</small></td>
-            <td>Instrumentación</td><td>Lab. Electrónica</td>
-            <td><span class="badge badge-soft-warning rounded-pill">MANTENIMIENTO</span></td>
-            <td><code class="small">BKP-9130B-0441</code></td>
-            <td>
-              <div class="d-flex gap-1">
-                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEquipo" title="Editar"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEstado" title="Estado"><i class="bi bi-arrow-repeat"></i></button>
-                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalHistorial" title="Historial"><i class="bi bi-clock-history"></i></button>
-                <button class="btn btn-outline-danger btn-sm" onclick="darBaja()" title="Dar de baja"><i class="bi bi-trash"></i></button>
-              </div>
-            </td>
-          </tr>
+        <tbody id="equipos-tbody">
+          <tr><td colspan="7" class="text-center text-muted py-4">Cargando equipos...</td></tr>
         </tbody>
       </table>
     </div>
-    <div class="card-footer bg-transparent d-flex justify-content-center py-3"><nav><ul class="pagination pagination-sm mb-0"><li class="page-item active"><a class="page-link">1</a></li><li class="page-item"><a class="page-link">2</a></li><li class="page-item"><a class="page-link">›</a></li></ul></nav></div>
+    <div class="card-footer bg-transparent d-flex justify-content-center py-3"><nav><ul class="pagination pagination-sm mb-0" id="paginacion"></ul></nav></div>
     </div>
   </div>
 </div>
 <!-- Add/Edit Modal -->
 <div class="modal fade" id="modalEquipo" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content rounded-4">
-  <div class="modal-header border-0"><h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Registrar Nuevo Equipo</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-header border-0"><h5 class="modal-title fw-bold" id="modal-titulo"><i class="bi bi-plus-circle me-2"></i>Registrar Nuevo Equipo</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body">
     <form id="eq-form" novalidate>
       <div class="row g-3">
         <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Nombre *</label><input type="text" id="eq-nom" class="form-control" placeholder="Ej. Osciloscopio Digital" required><div class="invalid-feedback">Requerido (mín. 3 chars).</div></div>
         <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Código inventario *</label><input type="text" id="eq-cod" class="form-control" placeholder="LAB-EQ-00XXX" required><div class="invalid-feedback">Requerido y único.</div></div>
-        <div class="col-md-4"><label class="form-label small fw-semibold text-uppercase text-muted">Marca</label><input type="text" class="form-control" placeholder="Ej. Rigol"></div>
-        <div class="col-md-4"><label class="form-label small fw-semibold text-uppercase text-muted">Modelo</label><input type="text" class="form-control" placeholder="Ej. DS1054Z"></div>
-        <div class="col-md-4"><label class="form-label small fw-semibold text-uppercase text-muted">No. serie (único)</label><input type="text" class="form-control" placeholder="Ej. SN123456"></div>
+        <div class="col-md-4"><label class="form-label small fw-semibold text-uppercase text-muted">Marca</label><input type="text" id="eq-marca" class="form-control" placeholder="Ej. Rigol"></div>
+        <div class="col-md-4"><label class="form-label small fw-semibold text-uppercase text-muted">Modelo</label><input type="text" id="eq-modelo" class="form-control" placeholder="Ej. DS1054Z"></div>
+        <div class="col-md-4"><label class="form-label small fw-semibold text-uppercase text-muted">No. serie (único)</label><input type="text" id="eq-serie" class="form-control" placeholder="Ej. SN123456"></div>
         <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Categoría *</label>
-          <select id="eq-cat" class="form-select" required><option value="">Selecciona...</option><option>Instrumentación</option><option>Microcontroladores</option><option>Computación</option><option>Componentes</option><option>Herramientas</option></select><div class="invalid-feedback">Selecciona categoría.</div></div>
+          <input type="text" id="eq-cat" class="form-control" placeholder="Ej. Instrumentación" required><div class="invalid-feedback">La categoría es requerida.</div></div>
         <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Laboratorio *</label>
-          <select id="eq-lab" class="form-select" required><option value="">Selecciona...</option><option>Lab. Electrónica</option><option>Lab. Cómputo</option><option>Lab. Microcontroladores</option></select><div class="invalid-feedback">Selecciona laboratorio.</div></div>
-        <div class="col-12"><label class="form-label small fw-semibold text-uppercase text-muted">URL de imagen</label><input type="url" class="form-control" placeholder="https://..."></div>
-        <div class="col-12"><label class="form-label small fw-semibold text-uppercase text-muted">Descripción</label><textarea class="form-control" rows="2" placeholder="Características principales..." maxlength="1000"></textarea></div>
+          <input type="text" id="eq-lab" class="form-control" placeholder="Ej. Lab. Electrónica" required><div class="invalid-feedback">El laboratorio es requerido.</div></div>
+        <div class="col-12"><label class="form-label small fw-semibold text-uppercase text-muted">URL de imagen</label><input type="url" id="eq-img" class="form-control" placeholder="https://..."></div>
+        <div class="col-12"><label class="form-label small fw-semibold text-uppercase text-muted">Descripción</label><textarea class="form-control" id="eq-desc" rows="2" placeholder="Características principales..." maxlength="1000"></textarea></div>
       </div>
     </form>
   </div>
   <div class="modal-footer border-0">
-    <button class="btn btn-primary" onclick="guardarEquipo()"><i class="bi bi-check2 me-1"></i>Registrar</button>
+    <button class="btn btn-primary" id="btn-guardar" onclick="guardarEquipo()"><i class="bi bi-check2 me-1"></i>Registrar</button>
     <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
   </div>
 </div></div></div>
-<!-- State Modal -->
-<div class="modal fade" id="modalEstado" tabindex="-1"><div class="modal-dialog"><div class="modal-content rounded-4">
-  <div class="modal-header border-0"><h5 class="modal-title fw-bold"><i class="bi bi-arrow-repeat me-2"></i>Cambiar Estado</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
-  <div class="modal-body">
-    <p class="text-muted small mb-3">Equipo: <strong>Osciloscopio Digital DS1054Z</strong></p>
-    <div class="mb-3"><label class="form-label small fw-semibold text-uppercase text-muted">Nuevo Estado *</label>
-      <select class="form-select"><option>✅ DISPONIBLE</option><option>📦 PRESTADO</option><option selected>🔧 MANTENIMIENTO</option><option>🗑 BAJA</option></select></div>
-    <div class="mb-3"><label class="form-label small fw-semibold text-uppercase text-muted">Razón (opcional)</label><textarea class="form-control" rows="2" placeholder="Ej. Enviado a calibración..."></textarea></div>
-    <div class="alert alert-info small"><i class="bi bi-info-circle me-1"></i>Este cambio quedará registrado en HistorialEquipo.</div>
-  </div>
-  <div class="modal-footer border-0">
-    <button class="btn btn-primary" onclick="bootstrap.Modal.getInstance(document.getElementById('modalEstado')).hide();alert('Estado actualizado ✓')">Guardar</button>
-    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-  </div>
-</div></div></div>
-<!-- History Modal -->
-<div class="modal fade" id="modalHistorial" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content rounded-4">
-  <div class="modal-header border-0"><h5 class="modal-title fw-bold"><i class="bi bi-clock-history me-2"></i>Historial: Osciloscopio DS1054Z</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
-  <div class="modal-body">
-    
-    <div class="d-flex gap-3 mb-3">
-      <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;background:#d1fae5;color:#065f46;font-size:13px;">✅</div>
-      <div><p class="fw-semibold mb-0 small">MANTENIMIENTO → DISPONIBLE</p><p class="small text-muted mb-0">Dr. García López · Calibración completada</p><small class="font-monospace text-muted">01 Abr 2026, 09:00</small></div>
-    </div>
-    <div class="d-flex gap-3 mb-3">
-      <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;background:#fef3c7;color:#92400e;font-size:13px;">🔧</div>
-      <div><p class="fw-semibold mb-0 small">DISPONIBLE → MANTENIMIENTO</p><p class="small text-muted mb-0">Dr. García López · Falla en pantalla</p><small class="font-monospace text-muted">20 Mar 2026, 14:30</small></div>
-    </div>
-    <div class="d-flex gap-3 mb-3">
-      <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;background:#d1fae5;color:#065f46;font-size:13px;">✅</div>
-      <div><p class="fw-semibold mb-0 small">PRESTADO → DISPONIBLE</p><p class="small text-muted mb-0">Dr. García López · Préstamo #P-2026-015 finalizado</p><small class="font-monospace text-muted">19 Mar 2026, 17:00</small></div>
-    </div>
-  </div>
-  <div class="modal-footer border-0"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button></div>
-</div></div></div>
+<script src="nav.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module">
-import { getProducts, getCategories, getLaboratories, createProduct, updateProduct, deleteProduct, getUser, showError, showSuccess } from './api.js';
+import { getProducts, getCategories, getLaboratories, createProduct, updateProduct, deleteProduct, getUser, showError, showSuccess, checkRole } from './api.js';
+
+if (!checkRole('encargado')) {
+    throw new Error('Unauthorized');
+}
 
 const user = getUser();
 buildNav(user.role, 'gestion-equipos.html');
 
 let products = [];
+let currentPage = 1;
+let editingId = null;
 
 async function init() {
   await loadFilters();
@@ -173,10 +88,16 @@ async function init() {
 async function loadFilters() {
   try {
     const [categories, laboratories] = await Promise.all([getCategories(), getLaboratories()]);
-    const catSelect = document.getElementById('eq-cat');
-    const labSelect = document.getElementById('eq-lab');
-    categories.forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
-    laboratories.forEach(l => labSelect.innerHTML += `<option value="${l}">${l}</option>`);
+    
+    const catSelect = document.getElementById('filtro-cat');
+    const labSelect = document.getElementById('filtro-lab');
+    
+    categories.forEach(c => {
+      catSelect.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+    laboratories.forEach(l => {
+      labSelect.innerHTML += `<option value="${l}">${l}</option>`;
+    });
   } catch (error) {
     console.error('Error loading filters:', error);
   }
@@ -184,32 +105,77 @@ async function loadFilters() {
 
 async function loadProducts() {
   try {
-    const result = await getProducts({});
+    const filters = {};
+    const search = document.getElementById('buscar').value;
+    const category = document.getElementById('filtro-cat').value;
+    const status = document.getElementById('filtro-estado').value;
+    const laboratory = document.getElementById('filtro-lab').value;
+
+    if (search) filters.search = search;
+    if (category) filters.category = category;
+    if (status) filters.status = status;
+    if (laboratory) filters.laboratory = laboratory;
+    filters.page = currentPage;
+    filters.limit = 20;
+
+    const result = await getProducts(filters);
     products = result.data;
     renderProducts(result.total);
+    renderPagination(result.total);
   } catch (error) {
     showError('Error al cargar productos');
   }
 }
 
+function renderPagination(total) {
+  const totalPages = Math.ceil(total / 20);
+  const pag = document.getElementById('paginacion');
+  if (totalPages <= 1) {
+    pag.innerHTML = '';
+    return;
+  }
+  
+  let html = `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage - 1})">‹</a></li>`;
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<li class="page-item ${currentPage === i ? 'active' : ''}"><a class="page-link" href="#" onclick="changePage(${i})">${i}</a></li>`;
+  }
+  html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" onclick="changePage(${currentPage + 1})">›</a></li>`;
+  pag.innerHTML = html;
+}
+
+window.changePage = function(page) {
+  currentPage = page;
+  loadProducts();
+};
+
 function renderProducts(total) {
-  document.querySelector('.card-header span').textContent = `Inventario (${total} equipos)`;
-  const tbody = document.querySelector('tbody');
-  tbody.innerHTML = products.map(p => `
-    <tr>
-      <td><code>${p.serialNumber || 'N/A'}</code></td>
-      <td><strong>${p.name}</strong>${p.description ? '<br><small class="text-muted">' + p.description + '</small>' : ''}</td>
-      <td>${p.category}</td><td>${p.laboratory}</td>
-      <td><span class="badge badge-soft-${p.status === 'disponible' ? 'success' : p.status === 'prestado' ? 'danger' : 'warning'} rounded-pill">${p.status.toUpperCase()}</span></td>
-      <td><code class="small">${p.serialNumber || 'N/A'}</code></td>
-      <td>
-        <div class="d-flex gap-1">
-          <button class="btn btn-outline-secondary btn-sm" title="Editar" onclick="editProduct('${p._id}')"><i class="bi bi-pencil"></i></button>
-          <button class="btn btn-outline-danger btn-sm" title="Dar de baja" onclick="deleteProduct('${p._id}')"><i class="bi bi-trash"></i></button>
-        </div>
-      </td>
-    </tr>
-  `).join('');
+  document.getElementById('total-equipos').textContent = total;
+  const tbody = document.getElementById('equipos-tbody');
+  
+  if (products.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No hay equipos registrados</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = products.map(p => {
+    const badgeClass = p.status === 'disponible' ? 'success' : p.status === 'prestado' ? 'danger' : 'warning';
+    return `
+      <tr>
+        <td><code>${p.serialNumber || 'N/A'}</code></td>
+        <td><strong>${p.name}</strong>${p.description ? '<br><small class="text-muted">' + p.description.substring(0, 50) + '</small>' : ''}</td>
+        <td>${p.category || '-'}</td>
+        <td>${p.laboratory || '-'}</td>
+        <td><span class="badge badge-soft-${badgeClass} rounded-pill">${p.status?.toUpperCase() || 'N/A'}</span></td>
+        <td><code class="small">${p.serialNumber || 'N/A'}</code></td>
+        <td>
+          <div class="d-flex gap-1">
+            <button class="btn btn-outline-secondary btn-sm" title="Editar" onclick="editProduct('${p._id}')"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-outline-danger btn-sm" title="Dar de baja" onclick="deleteProduct('${p._id}')"><i class="bi bi-trash"></i></button>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
 window.guardarEquipo = async function() {
@@ -221,25 +187,38 @@ window.guardarEquipo = async function() {
   
   n.value.trim().length < 3 ? (n.classList.add('is-invalid'), ok = false) : n.classList.remove('is-invalid');
   c.value.trim() ? c.classList.remove('is-invalid') : (c.classList.add('is-invalid'), ok = false);
-  cat.value ? cat.classList.remove('is-invalid') : (cat.classList.add('is-invalid'), ok = false);
-  lab.value ? lab.classList.remove('is-invalid') : (lab.classList.add('is-invalid'), ok = false);
+  cat.value.trim() ? cat.classList.remove('is-invalid') : (cat.classList.add('is-invalid'), ok = false);
+  lab.value.trim() ? lab.classList.remove('is-invalid') : (lab.classList.add('is-invalid'), ok = false);
   
   if (!ok) return;
 
+  const productData = {
+    name: n.value.trim(),
+    serialNumber: c.value.trim(),
+    category: cat.value,
+    laboratory: lab.value,
+    description: document.getElementById('eq-desc').value,
+    imageUrl: document.getElementById('eq-img').value,
+    brand: document.getElementById('eq-marca').value,
+    model: document.getElementById('eq-modelo').value,
+    status: 'disponible'
+  };
+
   try {
-    await createProduct({
-      name: n.value.trim(),
-      serialNumber: c.value.trim(),
-      category: cat.value,
-      laboratory: lab.value,
-      status: 'disponible'
-    });
-    bootstrap.Modal.getInstance(document.getElementById('modalEquipo')).hide();
-    showSuccess('Equipo registrado');
-    n.value = ''; c.value = ''; cat.value = ''; lab.value = '';
+    if (editingId) {
+      await updateProduct(editingId, productData);
+      showSuccess('Equipo actualizado');
+    } else {
+      await createProduct(productData);
+      showSuccess('Equipo registrado');
+    }
+    const modalEl = document.getElementById('modalEquipo');
+const modalInstance = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+modalInstance.hide();
+    resetForm();
     loadProducts();
   } catch (error) {
-    showError(error.message || 'Error al registrar');
+    showError(error.message || 'Error al guardar');
   }
 };
 
@@ -257,17 +236,53 @@ window.deleteProduct = async function(id) {
 window.editProduct = function(id) {
   const p = products.find(x => x._id === id);
   if (p) {
-    document.getElementById('eq-nom').value = p.name;
+    editingId = id;
+    document.getElementById('modal-titulo').innerHTML = '<i class="bi bi-pencil-square me-2"></i>Editar Equipo';
+    document.getElementById('btn-guardar').innerHTML = '<i class="bi bi-check2 me-1"></i>Guardar cambios';
+    document.getElementById('eq-nom').value = p.name || '';
     document.getElementById('eq-cod').value = p.serialNumber || '';
-    document.getElementById('eq-cat').value = p.category;
-    document.getElementById('eq-lab').value = p.laboratory;
-    bootstrap.Modal.getInstance(document.getElementById('modalEquipo')).show();
+    document.getElementById('eq-marca').value = p.brand || '';
+    document.getElementById('eq-modelo').value = p.model || '';
+    document.getElementById('eq-serie').value = p.serialNumber || '';
+    document.getElementById('eq-cat').value = p.category || '';
+    document.getElementById('eq-lab').value = p.laboratory || '';
+    document.getElementById('eq-img').value = p.imageUrl || '';
+    document.getElementById('eq-desc').value = p.description || '';
+    new bootstrap.Modal(document.getElementById('modalEquipo')).show();
   }
+};
+
+window.resetForm = function() {
+  editingId = null;
+  document.getElementById('modal-titulo').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Registrar Nuevo Equipo';
+  document.getElementById('btn-guardar').innerHTML = '<i class="bi bi-check2 me-1"></i>Registrar';
+  document.getElementById('eq-form').reset();
+};
+
+let debounceTimer;
+window.debounceFilter = function() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    currentPage = 1;
+    loadProducts();
+  }, 300);
+};
+
+window.filterProducts = function() {
+  currentPage = 1;
+  loadProducts();
+};
+
+window.clearFilters = function() {
+  document.getElementById('buscar').value = '';
+  document.getElementById('filtro-cat').value = '';
+  document.getElementById('filtro-estado').value = '';
+  document.getElementById('filtro-lab').value = '';
+  currentPage = 1;
+  loadProducts();
 };
 
 init();
 </script>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="nav.js"></script>
-</body></html>
+</body>
+</html>

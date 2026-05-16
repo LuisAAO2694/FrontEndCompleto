@@ -15,91 +15,23 @@
     <a href="catalogo.html" class="btn btn-accent btn-sm"><i class="bi bi-plus-lg me-1"></i>Solicitar Equipo</a>
   </div>
   <div class="p-4">
-    <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
-      <i class="bi bi-exclamation-triangle-fill"></i>
-      <span>Tienes <strong>1 préstamo</strong> próximo a vencer. Por favor devuelve el equipo a tiempo.</span>
-    </div>
-
-    <div class="d-flex flex-column gap-4">
-
-      <!-- Loan 1 - expiring -->
-      <div class="card border-left-danger">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-              <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                <h6 class="fw-bold mb-0">Préstamo #P-2026-042</h6>
-                <span class="badge badge-soft-warning rounded-pill">⏳ Activo</span>
-                <span class="badge badge-soft-danger rounded-pill">⚠️ Vence en 3 días</span>
-              </div>
-              <p class="small text-muted mb-0">Solicitado: 12 Abr 2026 · Aprobado por: Dr. García López · Lab. Electrónica</p>
-            </div>
-            <code class="small text-muted">P-2026-042</code>
-          </div>
-          <div class="table-responsive mb-3">
-            <table class="table table-sm table-bordered">
-              <thead><tr><th>Equipo</th><th>Código</th><th>Categoría</th><th>Estado devolución</th></tr></thead>
-              <tbody>
-                <tr><td><strong>Osciloscopio Digital DS1054Z</strong></td><td><code>LAB-EQ-00025</code></td><td>Instrumentación</td><td><span class="badge badge-soft-warning rounded-pill">PENDIENTE</span></td></tr>
-                <tr><td><strong>Cable BNC a Cocodrilo</strong></td><td><code>LAB-EQ-00031</code></td><td>Componentes</td><td><span class="badge badge-soft-warning rounded-pill">PENDIENTE</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <div class="d-flex gap-4">
-              <div><small class="text-muted d-block">Fecha inicio</small><strong class="font-monospace">12 Abr 2026</strong></div>
-              <div><small class="text-muted d-block">Vencimiento</small><strong class="font-monospace text-danger">22 Abr 2026</strong></div>
-              <div><small class="text-muted d-block">Días restantes</small><strong class="text-danger">3 días</strong></div>
-            </div>
-            <a href="mensajes-estudiante.html" class="btn btn-outline-primary btn-sm"><i class="bi bi-chat-dots me-1"></i>Contactar encargado</a>
-          </div>
-          <div class="mt-3">
-            <div class="d-flex justify-content-between small text-muted mb-1"><span>Progreso del préstamo</span><span>71% completado</span></div>
-            <div class="progress loan-progress"><div class="progress-bar bg-danger" style="width:71%"></div></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Loan 2 - pending -->
-      <div class="card border-left-info">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start mb-3">
-            <div>
-              <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
-                <h6 class="fw-bold mb-0">Préstamo #P-2026-044</h6>
-                <span class="badge badge-soft-info rounded-pill">🕐 Pendiente de aprobación</span>
-              </div>
-              <p class="small text-muted mb-0">Solicitado: 18 Abr 2026 · Esperando revisión del encargado</p>
-            </div>
-          </div>
-          <div class="table-responsive mb-3">
-            <table class="table table-sm table-bordered">
-              <thead><tr><th>Equipo</th><th>Código</th><th>Categoría</th><th>Estado</th></tr></thead>
-              <tbody>
-                <tr><td><strong>Multímetro Fluke 117</strong></td><td><code>LAB-EQ-00120</code></td><td>Instrumentación</td><td><span class="badge badge-soft-info rounded-pill">PENDIENTE APROBACIÓN</span></td></tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <div class="d-flex gap-4">
-              <div><small class="text-muted d-block">Solicitado</small><strong class="font-monospace">18 Abr 2026</strong></div>
-              <div><small class="text-muted d-block">Devolución estimada</small><strong class="font-monospace">28 Abr 2026</strong></div>
-            </div>
-            <button class="btn btn-outline-danger btn-sm" onclick="cancelar()"><i class="bi bi-x-circle me-1"></i>Cancelar solicitud</button>
-          </div>
-        </div>
-      </div>
-
+    <div id="alerta-vencer"></div>
+    <div class="d-flex flex-column gap-4" id="prestamos-container">
+      <p class="text-center text-muted py-5">Cargando préstamos...</p>
     </div>
     <div class="text-center mt-4">
       <a href="historial-prestamos.html" class="btn btn-outline-secondary"><i class="bi bi-clock-history me-1"></i>Ver historial completo</a>
     </div>
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="nav.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module">
-import { getMyLoans, cancelLoan, getUser, showError, showSuccess } from './api.js';
+import { getMyLoans, cancelLoan, getUser, showError, showSuccess, checkRole } from './api.js';
+
+if (!checkRole('estudiante')) {
+    throw new Error('Unauthorized');
+}
 
 const user = getUser();
 buildNav(user.role, 'prestamos-activos.html');
@@ -114,8 +46,8 @@ async function loadLoans() {
 }
 
 function renderLoans(loans) {
-  const container = document.querySelector('.d-flex.flex-column.gap-4');
-  container.innerHTML = '';
+  const container = document.getElementById('prestamos-container');
+  const alertaContainer = document.getElementById('alerta-vencer');
 
   if (loans.length === 0) {
     container.innerHTML = `
@@ -132,10 +64,10 @@ function renderLoans(loans) {
   let porVencer = 0;
   const now = new Date();
 
-  loans.forEach(loan => {
+  container.innerHTML = loans.map(loan => {
     const fecha = new Date(loan.estimatedReturnDate);
     const diasRestantes = Math.ceil((fecha - now) / (1000 * 60 * 60 * 24));
-    if (diasRestantes <= 3) porVencer++;
+    if (diasRestantes <= 3 && diasRestantes >= 0) porVencer++;
 
     const borderClass = loan.status === 'ACTIVO' ? 'border-left-danger' : 'border-left-info';
     const statusLabel = {
@@ -161,15 +93,10 @@ function renderLoans(loans) {
 
     const progress = Math.min(100, Math.max(0, 100 - (diasRestantes / 14 * 100)));
     const actionButton = loan.status === 'PENDIENTE_APROBACION' 
-      ? `<button class="btn btn-outline-danger btn-sm" onclick="cancelLoan('${loan._id}')"><i class="bi bi-x-circle me-1"></i>Cancelar solicitud</button>`
+      ? `<button class="btn btn-outline-danger btn-sm" onclick="cancelLoanById('${loan._id}')"><i class="bi bi-x-circle me-1"></i>Cancelar solicitud</button>`
       : `<a href="mensajes-estudiante.html" class="btn btn-outline-primary btn-sm"><i class="bi bi-chat-dots me-1"></i>Contactar encargado</a>`;
 
-    const warningAlert = diasRestantes <= 3 && loan.status === 'ACTIVO' 
-      ? `<div class="alert alert-warning d-flex align-items-center gap-2 mb-4"><i class="bi bi-exclamation-triangle-fill"></i><span>Tienes <strong>${porVencer} préstamo</strong> próximo a vencer. Por favor devuelve el equipo a tiempo.</span></div>`
-      : '';
-
-    const html = `
-      ${warningAlert}
+    return `
       <div class="card ${borderClass}">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-start mb-3">
@@ -206,11 +133,19 @@ function renderLoans(loans) {
         </div>
       </div>
     `;
-    container.innerHTML += html;
-  });
+  }).join('');
+
+  if (porVencer > 0) {
+    alertaContainer.innerHTML = `
+      <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <span>Tienes <strong>${porVencer} préstamo</strong> próximo a vencer. Por favor devuelve el equipo a tiempo.</span>
+      </div>
+    `;
+  }
 }
 
-window.cancelLoan = async function(id) {
+window.cancelLoanById = async function(id) {
   if (!confirm('¿Cancelar esta solicitud?')) return;
   try {
     await cancelLoan(id);

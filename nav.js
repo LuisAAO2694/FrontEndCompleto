@@ -17,7 +17,6 @@ const NAV_ENCARGADO = [
   { label: 'Dashboard',             icon: 'bi-house-fill',         href: 'dashboard-encargado.html' },
   { section: 'Equipos' },
   { label: 'Gestión de Equipos',    icon: 'bi-cpu-fill',           href: 'gestion-equipos.html' },
-  { label: 'Categorías',            icon: 'bi-tags-fill',          href: 'categorias.html' },
   { section: 'Préstamos' },
   { label: 'Solicitudes Pendientes',icon: 'bi-hourglass-split',    href: 'solicitudes.html' },
   { label: 'Préstamos Activos',     icon: 'bi-box-seam-fill',      href: 'prestamos-encargado.html' },

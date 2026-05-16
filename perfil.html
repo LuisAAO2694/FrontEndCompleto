@@ -16,20 +16,20 @@
       <div class="col-md-4">
         <div class="card text-center">
           <div class="card-body py-4">
-            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold mx-auto mb-3" style="width:72px;height:72px;font-size:22px;">AL</div>
-            <h5 class="fw-bold mb-1">Ana López Torres</h5>
-            <p class="text-muted small mb-3">ana@iteso.mx</p>
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold mx-auto mb-3" id="profile-avatar" style="width:72px;height:72px;font-size:22px;">?</div>
+            <h5 class="fw-bold mb-1" id="profile-name">Cargando...</h5>
+            <p class="text-muted small mb-3" id="profile-email">...</p>
             <div class="d-flex justify-content-center gap-2">
-              <span class="badge badge-soft-info rounded-pill">ESTUDIANTE</span>
+              <span class="badge badge-soft-info rounded-pill" id="profile-role">CARGANDO</span>
               <span class="badge badge-soft-success rounded-pill">Activo ✓</span>
             </div>
           </div>
           <div class="list-group list-group-flush text-start">
-            <div class="list-group-item d-flex justify-content-between"><span class="text-muted small">Matrícula</span><code>A01234567</code></div>
-            <div class="list-group-item d-flex justify-content-between"><span class="text-muted small">Carrera</span><span class="small fw-semibold">Ing. en Sistemas</span></div>
-            <div class="list-group-item d-flex justify-content-between"><span class="text-muted small">Teléfono</span><code>3312345678</code></div>
-            <div class="list-group-item d-flex justify-content-between"><span class="text-muted small">Miembro desde</span><span class="small">Feb 2026</span></div>
-            <div class="list-group-item d-flex justify-content-between"><span class="text-muted small">Total préstamos</span><span class="fw-bold">10</span></div>
+            <div class="list-group-item d-flex justify-content-between"><span class="text-muted small">Matrícula</span><code id="profile-studentid">—</code></div>
+            <div class="list-group-item d-flex justify-content-between"><span class="text-muted small">Carrera</span><span class="small fw-semibold" id="profile-career">—</span></div>
+            <div class="list-group-item d-flex justify-content-between"><span class="text-muted small">Teléfono</span><code id="profile-phone">—</code></div>
+            <div class="list-group-item d-flex justify-content-between"><span class="text-muted small">Miembro desde</span><span class="small" id="profile-created">—</span></div>
+            <div class="list-group-item d-flex justify-content-between"><span class="text-muted small">Total préstamos</span><span class="fw-bold" id="profile-total-loans">0</span></div>
           </div>
         </div>
       </div>
@@ -41,15 +41,22 @@
             <form id="profile-form" novalidate>
               <div class="row g-3">
                 <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Nombre completo *</label>
-                  <input type="text" id="pnombre" class="form-control" value="Ana López Torres" required>
+                  <input type="text" id="pnombre" class="form-control" required>
                   <div class="invalid-feedback">Mínimo 3 caracteres.</div></div>
                 <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Correo *</label>
-                  <input type="email" id="pemail" class="form-control" value="ana@iteso.mx" required>
+                  <input type="email" id="pemail" class="form-control" required>
                   <div class="invalid-feedback">Correo inválido.</div></div>
                 <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Teléfono</label>
-                  <input type="tel" class="form-control" value="3312345678"></div>
+                  <input type="tel" id="ptel" class="form-control"></div>
                 <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Carrera</label>
-                  <select class="form-select"><option selected>Ing. en Sistemas Computacionales</option><option>Ing. Electrónica</option><option>Ing. Industrial</option></select></div>
+                  <select id="pcareer" class="form-select">
+                    <option value="">Selecciona...</option>
+                    <option>Ing. en Sistemas Computacionales</option>
+                    <option>Ing. Electrónica</option>
+                    <option>Ing. Industrial</option>
+                    <option>Ing. Mecánica</option>
+                    <option>Ing. Química</option>
+                  </select></div>
               </div>
               <hr class="my-4">
               <h6 class="fw-bold mb-3"><i class="bi bi-lock me-2"></i>Cambiar Contraseña</h6>
@@ -72,39 +79,48 @@
       </div>
     </div>
   </div>
+</div>
+<script src="nav.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module">
-import { getProfile, getUser, showError, showSuccess } from './api.js';
+import { getProfile, getUser, getMyLoans, showError, showSuccess, checkRole } from './api.js';
 
 const user = getUser();
+if (!user || (user.role !== 'estudiante' && user.role !== 'encargado')) {
+    window.location.href = 'index.html';
+}
+
 buildNav(user.role, 'perfil.html');
 
 async function loadProfile() {
   try {
-    const profile = await getProfile();
-    renderProfile(profile);
+    const [profile, loans] = await Promise.all([
+      getProfile(),
+      getMyLoans('all', 1, 1)
+    ]);
+    renderProfile(profile, loans.total);
   } catch (error) {
     console.error('Error loading profile:', error);
   }
 }
 
-function renderProfile(profile) {
-  document.querySelector('.rounded-circle').textContent = profile.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  document.querySelector('.card-body > h5').textContent = profile.name;
-  document.querySelector('.card-body > p').textContent = profile.email;
-  document.querySelector('.badge.badge-soft-info').textContent = profile.role === 'encargado' ? 'ENCARGADO' : 'ESTUDIANTE';
+function renderProfile(profile, totalLoans) {
+  document.getElementById('profile-avatar').textContent = profile.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  document.getElementById('profile-name').textContent = profile.name;
+  document.getElementById('profile-email').textContent = profile.email;
+  document.getElementById('profile-role').textContent = profile.role === 'encargado' ? 'ENCARGADO' : 'ESTUDIANTE';
 
-  document.getElementById('pnombre').value = profile.name;
-  document.getElementById('pemail').value = profile.email;
+  document.getElementById('profile-studentid').textContent = profile.studentId || 'N/A';
+  document.getElementById('profile-career').textContent = profile.career || 'N/A';
+  document.getElementById('profile-phone').textContent = profile.phone || 'N/A';
+  document.getElementById('profile-created').textContent = new Date(profile.createdAt).toLocaleDateString('es-MX', { month: 'short', year: 'numeric' });
+  document.getElementById('profile-total-loans').textContent = totalLoans;
 
-  const listItems = document.querySelectorAll('.list-group-item');
-  listItems[0].querySelector('code').textContent = profile.studentId || 'N/A';
-  listItems[1].querySelector('span:last-child').textContent = profile.career || 'N/A';
-  listItems[2].querySelector('code').textContent = profile.phone || 'N/A';
-  listItems[3].querySelector('span:last-child').textContent = new Date(profile.createdAt).toLocaleDateString('es-MX', { month: 'short', year: 'numeric' });
-
+  document.getElementById('pnombre').value = profile.name || '';
+  document.getElementById('pemail').value = profile.email || '';
   document.getElementById('ptel').value = profile.phone || '';
   if (profile.career) {
-    document.querySelector('select').value = profile.career;
+    document.getElementById('pcareer').value = profile.career;
   }
 }
 
@@ -116,8 +132,8 @@ document.getElementById('profile-form').addEventListener('submit', function(e) {
   const pn = document.getElementById('pnew');
   const pc = document.getElementById('pconf');
 
-  n.value.trim().length < 3 ? (n.classList.add('is-invalid'), ok = false) : n.classList.remove('is-invalid');
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value) ? em.classList.remove('is-invalid') : (em.classList.add('is-invalid'), ok = false);
+  if (n.value.trim().length < 3) { n.classList.add('is-invalid'); ok = false; } else n.classList.remove('is-invalid');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em.value)) { em.classList.add('is-invalid'); ok = false; } else em.classList.remove('is-invalid');
 
   if (pn.value) {
     if (!/^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(pn.value)) {
@@ -136,7 +152,5 @@ document.getElementById('profile-form').addEventListener('submit', function(e) {
 
 loadProfile();
 </script>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="nav.js"></script>
-</body></html>
+</body>
+</html>
