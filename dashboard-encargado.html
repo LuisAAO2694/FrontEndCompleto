@@ -86,7 +86,7 @@ async function loadStats() {
     const [pendientes, activos, productos, noDevueltos, mensajes] = await Promise.all([
       getLoans({ status: 'PENDIENTE_APROBACION' }),
       getLoans({ status: 'ACTIVO' }),
-      getProducts({}),
+      getProducts({ limit: 100 }),
       getNotReturnedLoans(1, 100),
       getMessages(1, 50)
     ]);
