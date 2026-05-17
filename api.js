@@ -140,9 +140,17 @@ export async function getLoanById(id) {
 }
 
 export async function createLoan(loanData) {
+    const user = getUser();    
+    if (!user || !user.id) {
+        throw new Error('Sesión de usuario no encontrada. Por favor, inicia sesión nuevamente.');
+    }
+    
     return await request('/loans', {
         method: 'POST',
-        body: JSON.stringify(loanData)
+        body: JSON.stringify({
+            ...loanData,
+            student: user.id
+        })
     });
 }
 
@@ -196,6 +204,10 @@ export async function getMyMessages(page = 1, limit = 10) {
     return await request(`/messages/mios?page=${page}&limit=${limit}`);
 }
 
+export async function getMessagesFromManager(page = 1, limit = 10) {
+    return await request(`/messages/from-manager?page=${page}&limit=${limit}`);
+}
+
 export async function sendMessage(messageData) {
     return await request('/messages', {
         method: 'POST',
@@ -203,10 +215,26 @@ export async function sendMessage(messageData) {
     });
 }
 
+export async function sendMessageToStudent(studentId, messageData) {
+    return await request('/messages/to-student', {
+        method: 'POST',
+        body: JSON.stringify({
+            student: studentId,
+            ...messageData
+        })
+    });
+}
+
 export async function respondMessage(id, content) {
     return await request(`/messages/${id}/responder`, {
         method: 'PATCH',
         body: JSON.stringify({ content })
+    });
+}
+
+export async function deleteMessage(id) {
+    return await request(`/messages/${id}`, {
+        method: 'DELETE'
     });
 }
 
@@ -235,32 +263,40 @@ export async function getUsers(filters = {}) {
 
 export function showError(message) {
     const alertHtml = `
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div class="toast align-items-center text-white bg-danger border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
         </div>
     `;
-    document.body.insertAdjacentHTML('afterbegin', alertHtml);
-    setTimeout(() => {
-        const alert = document.querySelector('.alert');
-        if (alert) alert.remove();
-    }, 5000);
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+    const toast = document.querySelector('.toast:last-child');
+    new bootstrap.Toast(toast).show();
+    setTimeout(() => toast.remove(), 5000);
 }
 
 export function showSuccess(message) {
     const alertHtml = `
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+            <div class="toast align-items-center text-white bg-success border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi bi-check-circle-fill me-2"></i>${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
         </div>
     `;
-    document.body.insertAdjacentHTML('afterbegin', alertHtml);
-    setTimeout(() => {
-        const alert = document.querySelector('.alert');
-        if (alert) alert.remove();
-    }, 5000);
+    document.body.insertAdjacentHTML('beforeend', alertHtml);
+    const toast = document.querySelector('.toast:last-child');
+    new bootstrap.Toast(toast).show();
+    setTimeout(() => toast.remove(), 5000);
 }
 
 export function formatDate(dateString) {

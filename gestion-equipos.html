@@ -54,6 +54,11 @@
           <input type="text" id="eq-cat" class="form-control" placeholder="Ej. Instrumentación" required><div class="invalid-feedback">La categoría es requerida.</div></div>
         <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Laboratorio *</label>
           <input type="text" id="eq-lab" class="form-control" placeholder="Ej. Lab. Electrónica" required><div class="invalid-feedback">El laboratorio es requerido.</div></div>
+        <div class="col-md-6"><label class="form-label small fw-semibold text-uppercase text-muted">Estado *</label>
+          <select id="eq-estado" class="form-select" required>
+            <option value="disponible">Disponible</option>
+            <option value="mantenimiento">Mantenimiento</option>
+          </select><div class="invalid-feedback">El estado es requerido.</div></div>
         <div class="col-12"><label class="form-label small fw-semibold text-uppercase text-muted">URL de imagen</label><input type="url" id="eq-img" class="form-control" placeholder="https://..."></div>
         <div class="col-12"><label class="form-label small fw-semibold text-uppercase text-muted">Descripción</label><textarea class="form-control" id="eq-desc" rows="2" placeholder="Características principales..." maxlength="1000"></textarea></div>
       </div>
@@ -201,7 +206,7 @@ window.guardarEquipo = async function() {
     imageUrl: document.getElementById('eq-img').value,
     brand: document.getElementById('eq-marca').value,
     model: document.getElementById('eq-modelo').value,
-    status: 'disponible'
+    status: document.getElementById('eq-estado').value
   };
 
   try {
@@ -248,6 +253,14 @@ window.editProduct = function(id) {
     document.getElementById('eq-lab').value = p.laboratory || '';
     document.getElementById('eq-img').value = p.imageUrl || '';
     document.getElementById('eq-desc').value = p.description || '';
+    const estadoSelect = document.getElementById('eq-estado');
+    if (p.status === 'prestado') {
+      estadoSelect.innerHTML = '<option value="prestado">Prestado (automático)</option>';
+      estadoSelect.disabled = true;
+    } else {
+      estadoSelect.innerHTML = '<option value="disponible" ' + (p.status === 'disponible' ? 'selected' : '') + '>Disponible</option><option value="mantenimiento" ' + (p.status === 'mantenimiento' ? 'selected' : '') + '>Mantenimiento</option>';
+      estadoSelect.disabled = false;
+    }
     new bootstrap.Modal(document.getElementById('modalEquipo')).show();
   }
 };
@@ -257,6 +270,8 @@ window.resetForm = function() {
   document.getElementById('modal-titulo').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Registrar Nuevo Equipo';
   document.getElementById('btn-guardar').innerHTML = '<i class="bi bi-check2 me-1"></i>Registrar';
   document.getElementById('eq-form').reset();
+  document.getElementById('eq-estado').innerHTML = '<option value="disponible">Disponible</option><option value="mantenimiento">Mantenimiento</option>';
+  document.getElementById('eq-estado').disabled = false;
 };
 
 let debounceTimer;

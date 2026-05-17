@@ -93,12 +93,12 @@ async function loadMensajes() {
     const filtro = document.getElementById('filtro-estado').value;
     let filtrados = mensajes;
     if (filtro === 'SIN_RESPUESTA') {
-      filtrados = mensajes.filter(m => !m.response);
+      filtrados = mensajes.filter(m => !m.response?.content);
     } else if (filtro === 'RESPONDIDO') {
-      filtrados = mensajes.filter(m => m.response);
+      filtrados = mensajes.filter(m => m.response?.content);
     }
     
-    const sinResponder = mensajes.filter(m => !m.response).length;
+    const sinResponder = mensajes.filter(m => !m.response?.content).length;
     document.getElementById('sin-responder-count').textContent = `${sinResponder} sin responder`;
     
     renderLista(filtrados);
@@ -119,7 +119,7 @@ function renderLista(lista) {
   
   container.innerHTML = lista.map(m => {
     const fecha = new Date(m.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
-    const hasResponse = !!m.response;
+    const hasResponse = !!m.response?.content;
     
     return `
       <div class="list-group-item list-group-item-action p-3 cursor-pointer" onclick="seleccionarMensaje('${m._id}')">
@@ -159,13 +159,13 @@ window.seleccionarMensaje = function(id) {
       </div>
       <p class="mb-0" style="font-size:13.5px;">${mensajeActual.content || ''}</p>
     </div>
-    ${mensajeActual.response ? `
+    ${mensajeActual.response?.content ? `
     <div class="p-3 rounded-3 mb-4" style="background:#d1fae5;border:1px solid #a7f3d0;">
       <div class="d-flex justify-content-between mb-1">
         <strong>Encargado (Tú)</strong>
-        <small class="font-monospace text-muted">${new Date(mensajeActual.responseAt).toLocaleDateString('es-MX')}</small>
+        <small class="font-monospace text-muted">${mensajeActual.response.date ? new Date(mensajeActual.response.date).toLocaleDateString('es-MX') : ''}</small>
       </div>
-      <p class="mb-0 small">${mensajeActual.response}</p>
+      <p class="mb-0 small">${mensajeActual.response.content}</p>
     </div>
     ` : ''}
     <form id="reply-form" novalidate>
@@ -226,6 +226,8 @@ window.eliminarMsg = function() {
     showSuccess('Mensaje eliminado');
   }
 };
+
+window.loadMensajes = loadMensajes;
 
 loadMensajes();
 </script>

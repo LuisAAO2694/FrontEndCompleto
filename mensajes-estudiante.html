@@ -20,52 +20,31 @@
         <div class="card">
           <div class="card-header py-3 px-4 d-flex justify-content-between align-items-center">
             <span class="fw-bold"><i class="bi bi-inbox me-2"></i>Conversaciones</span>
-            <span class="badge bg-warning text-dark rounded-pill">2 sin responder</span>
+            <span class="badge bg-warning text-dark rounded-pill" id="sin-responder">0 sin responder</span>
           </div>
-          <div class="list-group list-group-flush">
-            <div class="list-group-item list-group-item-action active p-3">
-              <div class="d-flex justify-content-between"><strong>Dr. García López</strong><small class="font-monospace">Ayer</small></div>
-              <p class="mb-1 small fw-semibold">Re: ¿El osciloscopio incluye cables?</p>
-              <span class="badge badge-soft-success rounded-pill">Respondido ✓</span>
-            </div>
-            <div class="list-group-item list-group-item-action p-3">
-              <div class="d-flex justify-content-between"><strong>Dr. García López</strong><small class="font-monospace">15 Abr</small></div>
-              <p class="mb-1 small fw-semibold">Disponibilidad Raspberry Pi 4</p>
-              <span class="badge badge-soft-warning rounded-pill">Sin respuesta</span>
-            </div>
-            <div class="list-group-item list-group-item-action p-3">
-              <div class="d-flex justify-content-between"><strong>Dr. García López</strong><small class="font-monospace">10 Abr</small></div>
-              <p class="mb-1 small fw-semibold">Horario Lab. Electrónica</p>
-              <span class="badge badge-soft-success rounded-pill">Respondido ✓</span>
-            </div>
+          <div class="list-group list-group-flush" id="mensajes-lista">
+            <div class="text-center text-muted py-4">Cargando...</div>
           </div>
         </div>
       </div>
       <div class="col-md-7">
         <div class="card">
           <div class="card-header py-3 px-4">
-            <span class="fw-bold">💬 ¿El osciloscopio incluye cables?</span>
-            <div class="mt-1"><span class="badge badge-soft-muted rounded-pill small">Equipo: Osciloscopio Digital</span></div>
+            <span class="fw-bold" id="detalle-asunto">Selecciona un mensaje</span>
+            <div class="mt-1" id="detalle-equipo"></div>
           </div>
-          <div class="card-body" style="height:320px;overflow-y:auto;">
-            <div class="d-flex flex-column align-items-end mb-4">
-              <div class="bubble-sent">Buenos días, Dr. García. Quisiera saber si el Osciloscopio Digital DS1054Z incluye los cables BNC de medición para mi práctica.</div>
-              <small class="text-muted mt-1" style="font-size:10.5px;">Tú · 18 Abr, 11:10 am</small>
+          <div class="card-body" style="height:320px;overflow-y:auto;" id="detalle-cuerpo">
+            <div class="text-center text-muted py-5">
+              <i class="bi bi-envelope-open fs-1"></i>
+              <p class="mt-2">Selecciona una conversación para ver los detalles</p>
             </div>
-            <div class="d-flex flex-column align-items-start mb-3">
-              <div class="bubble-received">Hola Ana, sí incluye dos cables BNC con puntas estándar. También hay cables BNC a cocodrilo si los necesitas, solo menciónalo en tu solicitud. ¡Cualquier duda, con confianza! 😊</div>
-              <small class="text-muted mt-1" style="font-size:10.5px;">Dr. García López · Ayer, 4:30 pm</small>
-            </div>
-          </div>
-          <div class="card-footer bg-transparent">
-            <div class="alert alert-success small mb-2"><i class="bi bi-check-circle me-1"></i>Este mensaje ya fue respondido.</div>
-            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevo">+ Nueva consulta</button>
           </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
 <div class="modal fade" id="modalNuevo" tabindex="-1"><div class="modal-dialog"><div class="modal-content rounded-4">
   <div class="modal-header border-0"><h5 class="modal-title fw-bold"><i class="bi bi-envelope-plus me-2"></i>Nuevo Mensaje</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
   <div class="modal-body">
@@ -74,11 +53,11 @@
         <input type="text" id="asunto" class="form-control" placeholder="Consulta sobre..." required maxlength="120">
         <div class="invalid-feedback">El asunto es requerido.</div></div>
       <div class="mb-3"><label class="form-label small fw-semibold text-uppercase text-muted">Equipo relacionado</label>
-        <select class="form-select"><option value="">Sin equipo específico</option><option>Osciloscopio Digital</option><option>Multímetro Fluke 117</option><option>Arduino Mega 2560</option></select></div>
+        <select class="form-select" id="equipo-select"><option value="">Sin equipo específico</option></select></div>
       <div class="mb-3"><label class="form-label small fw-semibold text-uppercase text-muted">Mensaje *</label>
-        <textarea id="contenido" class="form-control" rows="4" required maxlength="2000" placeholder="Escribe tu consulta..."></textarea>
+        <textarea id="contenido" class="form-control" rows="4" required maxlength="1000" placeholder="Escribe tu consulta..."></textarea>
         <div class="invalid-feedback">El mensaje no puede estar vacío.</div>
-        <div class="form-text text-end"><span id="char-c">0</span> / 2000</div></div>
+        <div class="form-text text-end"><span id="char-c">0</span> / 1000</div></div>
     </form>
   </div>
   <div class="modal-footer border-0">
@@ -86,24 +65,182 @@
     <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
   </div>
 </div></div></div>
-<script>
-document.getElementById('contenido').addEventListener('input',function(){document.getElementById('char-c').textContent=this.value.length;});
-function enviarMsg(){
-  const a=document.getElementById('asunto'),c=document.getElementById('contenido'); let ok=true;
-  a.value.trim()?(a.classList.remove('is-invalid')):(a.classList.add('is-invalid'),ok=false);
-  c.value.trim()?(c.classList.remove('is-invalid')):(c.classList.add('is-invalid'),ok=false);
-  if(!ok)return;
-  bootstrap.Modal.getInstance(document.getElementById('modalNuevo')).hide();
-  alert('✅ Mensaje enviado correctamente.');
-}
-</script>
-</div>
+
 <script src="nav.js"></script>
-<script>
-const rol = sessionStorage.getItem('rol');
-if (rol !== 'estudiante') {
-    window.location.href = 'index.html';
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+import { getMyMessages, getProducts, sendMessage, getUser, showError, showSuccess, checkRole } from './api.js';
+
+if (!checkRole('estudiante')) {
+    throw new Error('Unauthorized');
 }
-buildNav(rol || 'estudiante', 'mensajes-estudiante.html', sessionStorage.getItem('nombre')||'Usuario');
+
+const user = getUser();
+buildNav(user.role, 'mensajes-estudiante.html');
+
+let mensajes = [];
+let mensajeActual = null;
+let replyingToId = null;
+
+document.getElementById('contenido').addEventListener('input', function() {
+    document.getElementById('char-c').textContent = this.value.length;
+});
+
+async function init() {
+  await loadEquipos();
+  loadMensajes();
+}
+
+async function loadEquipos() {
+  try {
+    const result = await getProducts({ limit: 100 });
+    const select = document.getElementById('equipo-select');
+    result.data.forEach(p => {
+      select.innerHTML += `<option value="${p._id}">${p.name}</option>`;
+    });
+  } catch (e) { console.error(e); }
+}
+
+async function loadMensajes() {
+  try {
+    const result = await getMyMessages(1, 50);
+    mensajes = result.data || [];
+    renderLista();
+  } catch (error) {
+    console.error('Error cargando mensajes:', error);
+    document.getElementById('mensajes-lista').innerHTML = '<div class="text-center text-muted py-4">Error al cargar mensajes</div>';
+  }
+}
+
+function renderLista() {
+  const container = document.getElementById('mensajes-lista');
+  const sinResponder = mensajes.filter(m => !m.response?.content).length;
+  document.getElementById('sin-responder').textContent = `${sinResponder} sin responder`;
+  
+  if (mensajes.length === 0) {
+    container.innerHTML = '<div class="text-center text-muted py-4">No hay mensajes</div>';
+    return;
+  }
+  
+  container.innerHTML = mensajes.map((m, index) => {
+    const fecha = new Date(m.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+    const hasResponse = !!m.response?.content;
+    const activeClass = index === 0 ? 'active' : '';
+    
+    return `
+      <div class="list-group-item list-group-item-action ${activeClass} p-3 cursor-pointer" onclick="seleccionarMensaje('${m._id}')">
+        <div class="d-flex justify-content-between"><strong>${m.manager?.name || 'Encargado'}</strong><small class="font-monospace">${fecha}</small></div>
+        <p class="mb-1 small fw-semibold">${m.subject || 'Sin asunto'}</p>
+        ${hasResponse 
+          ? '<span class="badge badge-soft-success rounded-pill">Respondido ✓</span>' 
+          : '<span class="badge badge-soft-warning rounded-pill">Sin respuesta</span>'}
+      </div>
+    `;
+  }).join('');
+  
+  if (mensajes.length > 0) {
+    seleccionarMensaje(mensajes[0]._id);
+  }
+}
+
+window.seleccionarMensaje = function(id) {
+  mensajeActual = mensajes.find(m => m._id === id);
+  if (!mensajeActual) return;
+  
+  document.getElementById('detalle-asunto').textContent = mensajeActual.subject || 'Sin asunto';
+  document.getElementById('detalle-equipo').innerHTML = mensajeActual.product 
+    ? `<span class="badge badge-soft-muted rounded-pill small">Equipo: ${mensajeActual.product.name}</span>` 
+    : '';
+  
+  const fecha = new Date(mensajeActual.createdAt).toLocaleDateString('es-MX', { 
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' 
+  });
+  
+  const cuerpo = document.getElementById('detalle-cuerpo');
+  const esDelEncargado = mensajeActual.sentByManager;
+  
+  let mensajesHtml = '';
+  
+  if (esDelEncargado) {
+    mensajesHtml += `
+      <div class="d-flex flex-column align-items-start mb-4">
+        <div class="bubble-received">${mensajeActual.content || ''}</div>
+        <small class="text-muted mt-1" style="font-size:10.5px;">${mensajeActual.manager?.name || 'Encargado'} · ${fecha}</small>
+      </div>
+    `;
+  } else {
+    mensajesHtml += `
+      <div class="d-flex flex-column align-items-end mb-4">
+        <div class="bubble-sent">${mensajeActual.content || ''}</div>
+        <small class="text-muted mt-1" style="font-size:10.5px;">Tú · ${fecha}</small>
+      </div>
+    `;
+  }
+  
+  if (mensajeActual.response?.content) {
+    mensajesHtml += `
+      <div class="d-flex flex-column align-items-start mb-3">
+        <div class="bubble-received">${mensajeActual.response.content}</div>
+        <small class="text-muted mt-1" style="font-size:10.5px;">${mensajeActual.manager?.name || 'Encargado'} · ${mensajeActual.response.date ? new Date(mensajeActual.response.date).toLocaleDateString('es-MX', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) : ''}</small>
+      </div>
+    `;
+  }
+  
+  const footerHtml = esDelEncargado && !mensajeActual.response?.content
+    ? `<button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevo" onclick="prepararRespuesta('${mensajeActual._id}', '${mensajeActual.subject}')">✏️ Responder</button>`
+    : `<button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevo">+ Nueva consulta</button>`;
+  
+  cuerpo.innerHTML = mensajesHtml + `
+    <div class="alert alert-success small mb-2"><i class="bi bi-check-circle me-1"></i>Este mensaje ya fue respondido.</div>
+    ${footerHtml}
+  `;
+};
+
+window.prepararRespuesta = function(msgId, subject) {
+  replyingToId = msgId;
+  document.getElementById('asunto').value = 'Re: ' + subject;
+  document.getElementById('contenido').value = '';
+  document.getElementById('char-c').textContent = '0';
+};
+
+window.enviarMsg = async function() {
+  const a = document.getElementById('asunto');
+  const c = document.getElementById('contenido');
+  const equipo = document.getElementById('equipo-select');
+  
+  let ok = true;
+  const subject = a.value.trim();
+  const content = c.value.trim();
+  
+  if (subject.length < 3) { a.classList.add('is-invalid'); ok = false; } else { a.classList.remove('is-invalid'); }
+  if (content.length < 10 || content.length > 1000) { c.classList.add('is-invalid'); ok = false; } else { c.classList.remove('is-invalid'); }
+  
+  if (!ok) return;
+  
+  try {
+    const messageData = {
+      subject: subject,
+      content: content
+    };
+    
+    if (equipo.value) {
+      messageData.product = equipo.value;
+    }
+    
+    await sendMessage(messageData);
+    
+    bootstrap.Modal.getInstance(document.getElementById('modalNuevo')).hide();
+    showSuccess('Mensaje enviado correctamente');
+    a.value = '';
+    c.value = '';
+    document.getElementById('char-c').textContent = '0';
+    loadMensajes();
+  } catch (error) {
+    showError('Error al enviar mensaje');
+  }
+};
+
+init();
 </script>
-</body></html>
+</body>
+</html>

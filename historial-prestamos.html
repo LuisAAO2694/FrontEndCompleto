@@ -24,6 +24,7 @@
           </div>
           <div class="col-md-3 d-flex gap-2">
             <button class="btn btn-primary btn-sm flex-fill" onclick="filtrarHistorial()">Filtrar</button>
+            <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltros()">Limpiar</button>
           </div>
         </div>
       </div>
@@ -52,7 +53,9 @@
 <script src="nav.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module">
-import { getMyLoans, getUser, checkRole } from './api.js';
+import { getMyLoans, getProducts, getUser, checkRole } from './api.js';
+
+let productsMap = {};
 
 if (!checkRole('estudiante')) {
     throw new Error('Unauthorized');
@@ -62,16 +65,46 @@ const user = getUser();
 buildNav(user.role, 'historial-prestamos.html');
 
 let currentPage = 1;
+let todosLosPrestamos = [];
 
 async function loadHistorial() {
   try {
-    const result = await getMyLoans('historial', currentPage, 20);
-    document.getElementById('total-registros').textContent = result.total;
-    renderHistorial(result.data);
-    renderPagination(result.total);
+    const [loansResult, prodsResult] = await Promise.all([
+      getMyLoans('historial', 1, 100),
+      getProducts({ limit: 100 })
+    ]);
+    
+    (prodsResult.data || []).forEach(p => {
+      productsMap[p._id] = p;
+    });
+    
+    todosLosPrestamos = loansResult.data || [];
+    document.getElementById('total-registros').textContent = loansResult.total;
+    aplicarFiltros();
   } catch (error) {
     console.error('Error:', error);
   }
+}
+
+function aplicarFiltros() {
+  const fechaInicio = document.getElementById('fecha-inicio').value;
+  const fechaFin = document.getElementById('fecha-fin').value;
+  const estado = document.getElementById('estado-filter').value;
+  
+  let filtrados = todosLosPrestamos;
+  
+  if (fechaInicio) {
+    filtrados = filtrados.filter(l => new Date(l.createdAt) >= new Date(fechaInicio));
+  }
+  if (fechaFin) {
+    filtrados = filtrados.filter(l => new Date(l.createdAt) <= new Date(fechaFin + 'T23:59:59'));
+  }
+  if (estado) {
+    filtrados = filtrados.filter(l => l.status === estado);
+  }
+  
+  document.getElementById('total-registros').textContent = filtrados.length;
+  renderHistorial(filtrados);
 }
 
 function renderHistorial(loans) {
@@ -90,10 +123,14 @@ function renderHistorial(loans) {
       'PARCIALMENTE_DEVUELTO': 'badge-soft-warning'
     }[loan.status] || 'badge-soft-secondary';
     
+    const productId = loan.equipment[0]?.product?._id;
+    const product = productsMap[productId] || {};
+    const categoria = product.category || '-';
+    
     return `<tr>
       <td><code>#${loan._id.slice(-6).toUpperCase()}</code></td>
       <td>${loan.equipment.map(e => e.product?.name || 'Equipo').join(', ')}</td>
-      <td>${loan.equipment[0]?.product?.category || '-'}</td>
+      <td>${categoria}</td>
       <td>${new Date(loan.createdAt).toLocaleDateString('es-MX')}</td>
       <td>${loan.actualReturnDate ? new Date(loan.actualReturnDate).toLocaleDateString('es-MX') : '—'}</td>
       <td><span class="badge ${statusClass} rounded-pill">${loan.status}</span></td>
@@ -125,7 +162,15 @@ window.changePage = function(page) {
 
 window.filtrarHistorial = function() {
   currentPage = 1;
-  loadHistorial();
+  aplicarFiltros();
+};
+
+window.limpiarFiltros = function() {
+  document.getElementById('fecha-inicio').value = '';
+  document.getElementById('fecha-fin').value = '';
+  document.getElementById('estado-filter').value = '';
+  currentPage = 1;
+  aplicarFiltros();
 };
 
 window.verDetalle = async function(id) {

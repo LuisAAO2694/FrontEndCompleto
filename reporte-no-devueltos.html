@@ -12,7 +12,6 @@
 <div class="main-content">
   <div class="topbar d-flex align-items-center justify-content-between">
     <div><h5 class="fw-bold mb-0">Reporte: Equipos No Devueltos</h5><p class="small text-muted mb-0">Préstamos vencidos o próximos a vencer</p></div>
-    <button class="btn btn-outline-secondary btn-sm" onclick="exportarCSV()"><i class="bi bi-download me-1"></i>Exportar CSV</button>
   </div>
   <div class="p-4">
     <div class="row g-3 mb-4">
@@ -21,9 +20,9 @@
       <div class="col-md-4"><div class="stat-card p-3 d-flex justify-content-between align-items-start"><div><div class="stat-num text-primary" id="stat-total">0</div><div class="small text-muted mt-1">Total en seguimiento</div></div><div class="stat-icon" style="background:#dbeafe;">📋</div></div></div>
     </div>
     <div class="card mb-4"><div class="card-body"><div class="row g-2 align-items-end">
-      <div class="col-md-4"><label class="form-label small fw-semibold text-muted text-uppercase">Laboratorio</label><select class="form-select" id="filtro-lab" onchange="loadReporte()"><option value="">Todos</option></select></div>
-      <div class="col-md-4"><label class="form-label small fw-semibold text-muted text-uppercase">Días mínimos de atraso</label><input type="number" class="form-control" id="filtro-dias" value="0" min="0" onchange="loadReporte()"></div>
-      <div class="col-md-4"><button class="btn btn-primary w-100" onclick="loadReporte()">Filtrar</button></div>
+      <div class="col-md-4"><label class="form-label small fw-semibold text-muted text-uppercase">Laboratorio</label><select class="form-select" id="filtro-lab"><option value="">Todos</option></select></div>
+      <div class="col-md-4"><label class="form-label small fw-semibold text-muted text-uppercase">Buscar estudiante</label><input type="text" class="form-control" id="buscar" placeholder="Nombre o ID..."></div>
+      <div class="col-md-4"><button class="btn btn-primary w-100" id="btn-filtrar">Filtrar</button></div>
     </div></div></div>
     
     <div class="card mb-4" id="card-vencidos"><div class="card-header py-3 px-4 d-flex align-items-center gap-2"><i class="bi bi-exclamation-triangle-fill text-danger"></i><span class="fw-bold text-danger">Equipos Vencidos (<span id="count-vencidos">0</span>)</span></div>
@@ -43,10 +42,34 @@
     </table></div></div>
   </div>
 </div>
+
+<div class="modal fade" id="modalMensaje" tabindex="-1"><div class="modal-dialog"><div class="modal-content rounded-4">
+  <div class="modal-header border-0"><h5 class="modal-title fw-bold"><i class="bi bi-chat-dots me-2"></i>Enviar Recordatorio</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+  <div class="modal-body">
+    <p class="small text-muted mb-3">Enviando a: <strong id="msg-estudiante"></strong></p>
+    <p class="small text-muted mb-3">Equipo: <strong id="msg-equipo"></strong></p>
+    <div class="mb-3"><label class="form-label small fw-semibold text-uppercase text-muted">Asunto *</label>
+      <input type="text" id="msg-asunto" class="form-control" placeholder="Recordatorio de préstamo"></div>
+    <div class="mb-3"><label class="form-label small fw-semibold text-uppercase text-muted">Mensaje *</label>
+      <textarea id="msg-contenido" class="form-control" rows="4" placeholder="Escribe tu mensaje..."></textarea>
+      <div class="form-text text-end"><span id="msg-char">0</span>/1000</div>
+    </div>
+  </div>
+  <div class="modal-footer border-0">
+    <button class="btn btn-primary" onclick="enviarRecordatorio()"><i class="bi bi-send me-1"></i>Enviar</button>
+    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+  </div>
+</div></div></div>
+
 <script src="nav.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module">
-import { getNotReturnedLoans, getLoans, getLaboratories, getUser, checkRole } from './api.js';
+import { getNotReturnedLoans, getLoans, getLaboratories, getProducts, sendMessageToStudent, getUser, showError, showSuccess, checkRole } from './api.js';
+
+let productsMap = {};
+let prestamoSeleccionado = null;
+let prestamosVencidos = [];
+let prestamosPorVencer = [];
 
 if (!checkRole('encargado')) {
     throw new Error('Unauthorized');
@@ -57,12 +80,20 @@ buildNav(user.role, 'reporte-no-devueltos.html');
 
 async function init() {
   try {
-    const labs = await getLaboratories();
+    const [labs, prods] = await Promise.all([getLaboratories(), getProducts({ limit: 100 })]);
     const select = document.getElementById('filtro-lab');
     labs.forEach(l => {
       select.innerHTML += `<option value="${l}">${l}</option>`;
     });
+    prods.data.forEach(p => {
+      productsMap[p._id] = p;
+    });
   } catch (e) { console.error(e); }
+  
+  document.getElementById('filtro-lab').addEventListener('change', loadReporte);
+  document.getElementById('btn-filtrar').addEventListener('click', loadReporte);
+  document.getElementById('buscar').addEventListener('keyup', debounceSearch);
+  
   loadReporte();
 }
 
@@ -70,7 +101,7 @@ async function loadReporte() {
   try {
     const [noDevueltos, activos] = await Promise.all([
       getNotReturnedLoans(1, 100),
-      getLoans({ status: 'ACTIVO' })
+      getLoans({ limit: 100 })
     ]);
     
     const now = new Date();
@@ -78,21 +109,33 @@ async function loadReporte() {
     let porVencer = [];
     
     const filterLab = document.getElementById('filtro-lab').value;
-    const filterDias = parseInt(document.getElementById('filtro-dias').value) || 0;
+    const searchTerm = (document.getElementById('buscar').value || '').trim().toLowerCase();
+    
+    const matchesSearch = (loan) => {
+      if (!searchTerm) return true;
+      const name = (loan.student?.name || '').toLowerCase();
+      const studentId = (loan.student?.studentId || '').toLowerCase();
+      return name.includes(searchTerm) || studentId.includes(searchTerm);
+    };
     
     noDevueltos.data.forEach(loan => {
       const diasAtraso = Math.ceil((now - new Date(loan.estimatedReturnDate)) / (1000 * 60 * 60 * 24));
       if (diasAtraso > 0) {
-        if (diasAtraso >= filterDias && (!filterLab || loan.equipment[0]?.product?.laboratory === filterLab)) {
+        const productId = loan.equipment[0]?.product?._id;
+        const product = productsMap[productId] || {};
+        if (matchesSearch(loan) && (!filterLab || product.laboratory === filterLab)) {
           vencidos.push({ ...loan, diasAtraso });
         }
       }
     });
     
-    activos.data.forEach(loan => {
+    const prestamosActivos = activos.data.filter(l => ['APROBADO', 'ACTIVO'].includes(l.status));
+    prestamosActivos.forEach(loan => {
       const diasRestantes = Math.ceil((new Date(loan.estimatedReturnDate) - now) / (1000 * 60 * 60 * 24));
       if (diasRestantes >= 0 && diasRestantes <= 5) {
-        if (!filterLab || loan.equipment[0]?.product?.laboratory === filterLab) {
+        const productId = loan.equipment[0]?.product?._id;
+        const product = productsMap[productId] || {};
+        if (matchesSearch(loan) && (!filterLab || product.laboratory === filterLab)) {
           porVencer.push({ ...loan, diasRestantes });
         }
       }
@@ -106,6 +149,9 @@ async function loadReporte() {
     
     renderVencidos(vencidos);
     renderPorVencer(porVencer);
+    
+    prestamosVencidos = vencidos;
+    prestamosPorVencer = porVencer;
   } catch (error) {
     console.error('Error loading reporte:', error);
   }
@@ -118,17 +164,21 @@ function renderVencidos(loans) {
     return;
   }
   
-  tbody.innerHTML = loans.map(loan => `
+  tbody.innerHTML = loans.map(loan => {
+    const productId = loan.equipment[0]?.product?._id;
+    const product = productsMap[productId] || {};
+    return `
     <tr style="background:#fff5f5;">
       <td><code>#${loan._id.slice(-6).toUpperCase()}</code></td>
       <td><strong>${loan.student?.name || 'Estudiante'}</strong>${loan.student?.studentId ? '<br><small class="font-monospace text-muted">' + loan.student.studentId + '</small>' : ''}</td>
       <td><strong>${loan.equipment[0]?.product?.name || 'Equipo'}</strong><br><code class="small">${loan.equipment[0]?.product?.serialNumber || 'N/A'}</code></td>
-      <td>${loan.equipment[0]?.product?.laboratory || '-'}</td>
+      <td>${product.laboratory || '-'}</td>
       <td class="font-monospace fw-bold text-danger">${new Date(loan.estimatedReturnDate).toLocaleDateString('es-MX')}</td>
       <td><span class="badge badge-soft-danger rounded-pill fw-bold">${loan.diasAtraso} días</span></td>
-      <td><div class="d-flex gap-1 flex-column"><button class="btn btn-success btn-sm"><i class="bi bi-box-arrow-in-down me-1"></i>Devolución</button><a href="mensajes-encargado.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-chat-dots me-1"></i>Contactar</a></div></td>
+      <td><div class="d-flex gap-1 flex-column"><button class="btn btn-success btn-sm" onclick="abrirDevolucion('${loan._id}')"><i class="bi bi-box-arrow-in-down me-1"></i>Devolución</button><button class="btn btn-outline-secondary btn-sm" onclick="abrirMensaje('${loan._id}')"><i class="bi bi-chat-dots me-1"></i>Contactar</button></div></td>
     </tr>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function renderPorVencer(loans) {
@@ -138,21 +188,86 @@ function renderPorVencer(loans) {
     return;
   }
   
-  tbody.innerHTML = loans.map(loan => `
+  tbody.innerHTML = loans.map(loan => {
+    const productId = loan.equipment[0]?.product?._id;
+    const product = productsMap[productId] || {};
+    return `
     <tr style="background:#fffbeb;">
       <td><code>#${loan._id.slice(-6).toUpperCase()}</code></td>
       <td><strong>${loan.student?.name || 'Estudiante'}</strong></td>
       <td>${loan.equipment.map(e => e.product?.name || 'Equipo').join(', ')}</td>
-      <td>${loan.equipment[0]?.product?.laboratory || '-'}</td>
+      <td>${product.laboratory || '-'}</td>
       <td class="font-monospace fw-bold text-warning">${new Date(loan.estimatedReturnDate).toLocaleDateString('es-MX')}</td>
       <td><span class="badge badge-soft-warning rounded-pill">${loan.diasRestantes} días</span></td>
-      <td><a href="mensajes-encargado.html" class="btn btn-outline-secondary btn-sm"><i class="bi bi-chat-dots me-1"></i>Recordatorio</a></td>
+      <td><button class="btn btn-outline-secondary btn-sm" onclick="abrirMensaje('${loan._id}')"><i class="bi bi-chat-dots me-1"></i>Recordatorio</button></td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
-window.exportarCSV = function() {
-  alert('Funcionalidad de exportación CSV en desarrollo');
+let debounceTimer;
+window.debounceSearch = function() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    loadReporte();
+  }, 300);
+};
+
+window.loadReporte = loadReporte;
+
+window.abrirMensaje = function(id) {
+  const loan = prestamosVencidos.find(l => l._id === id) || prestamosPorVencer.find(l => l._id === id);
+  if (!loan) return;
+  
+  prestamoSeleccionado = loan;
+  const product = productsMap[loan.equipment[0]?.product?._id] || {};
+  
+  document.getElementById('msg-estudiante').textContent = loan.student?.name || 'Estudiante';
+  document.getElementById('msg-equipo').textContent = product.name || 'Equipo';
+  document.getElementById('msg-asunto').value = loan.diasAtraso 
+    ? `Recordatorio: Préstamo vencido (${loan.diasAtraso} días)`
+    : `Recordatorio: Préstamo próximo a vencer (${loan.diasRestantes} días)`;
+  document.getElementById('msg-contenido').value = '';
+  document.getElementById('msg-char').textContent = '0';
+  
+  new bootstrap.Modal(document.getElementById('modalMensaje')).show();
+};
+
+document.getElementById('msg-contenido').addEventListener('input', function() {
+  document.getElementById('msg-char').textContent = this.value.length;
+});
+
+window.enviarRecordatorio = async function() {
+  const asunto = document.getElementById('msg-asunto').value.trim();
+  const contenido = document.getElementById('msg-contenido').value.trim();
+  
+  if (!asunto || !contenido) {
+    showError('Por favor completa todos los campos');
+    return;
+  }
+  
+  if (contenido.length < 10 || contenido.length > 1000) {
+    showError('El mensaje debe tener entre 10 y 1000 caracteres');
+    return;
+  }
+  
+  try {
+    const studentId = prestamoSeleccionado.student?._id || prestamoSeleccionado.student;
+    await sendMessageToStudent(studentId, {
+      subject: asunto,
+      content: contenido
+    });
+    
+    bootstrap.Modal.getInstance(document.getElementById('modalMensaje')).hide();
+    showSuccess('Recordatorio enviado correctamente');
+    loadReporte();
+  } catch (error) {
+    showError('Error al enviar mensaje');
+  }
+};
+
+window.abrirDevolucion = function(id) {
+  window.location.href = 'prestamos-encargado.html';
 };
 
 init();
